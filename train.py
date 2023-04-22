@@ -120,7 +120,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
 
             elif avg_vloss < best_vloss:
                 # Save model
-                model_name = 'Transformer_mse_vloss_best.pth'
+                model_name = 'Forward_mse_vloss_best.pth'
                 if os.path.exists(os.path.join(model_save_path, model_name)):
                     os.remove(os.path.join(model_save_path, model_name))
                 torch.save(model, os.path.join(model_save_path, model_name))
