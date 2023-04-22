@@ -8,7 +8,7 @@ MODEL_PATH = 'models'
 
 # Dataset
 RODS = 2
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 # See https://discuss.pytorch.org/t/w-cudaipctypes-cpp-22-producer-process-has-been-terminated-before-all-shared-cuda-tensors-released-see-note-sharing-cuda-tensors/124445/11
 NUM_WORKERS = 8
 SAMPLE_RATE = 10
@@ -22,8 +22,8 @@ NUM_LAYERS = 1
 NUM_LSTMS = 3
 
 # Train
-LEARNING_RATE = 5e-5
+LEARNING_RATE = 1e-3
 EPOCHS = 200
 VALID_FREQ = int(EPOCHS / 8) if EPOCHS < 200 else int(EPOCHS / 16) if EPOCHS < 500 else int(EPOCHS / 32)
-STEP_SIZE = 50
+STEP_SIZE = 30
 GAMMA = 0.8

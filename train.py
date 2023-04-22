@@ -30,8 +30,7 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
 
     for i, data in enumerate(training_loader):
         inputs, labels = data
-        inputs = inputs.float().to(device)
-        labels = labels.float().to(device)
+        inputs, labels = inputs.float().to(device), labels.float().to(device)
 
         optimizer.zero_grad()
 
@@ -60,7 +59,7 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
     return epoch_loss / (i + 1)
 
 
-def train_epochs_transformer(training_loader, test_loader, model, loss_fn, optimizer, scheduler, epochs=EPOCHS):
+def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler, epochs=EPOCHS):
     """
     Train transformer for epochs
     :param scheduler: torch.optim.lr_scheduler.StepLR
@@ -104,9 +103,12 @@ def train_epochs_transformer(training_loader, test_loader, model, loss_fn, optim
             for i, vdata in enumerate(test_loader):
                 vinputs, vlabels = vdata
                 vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
+
                 voutputs, _ = model(vinputs)
+
                 vloss = loss_fn(voutputs, vlabels)
                 running_vloss += vloss
+
             avg_vloss = running_vloss / (i + 1)
             print('{}: LOSS train: {}, valid: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
                                                          avg_loss, avg_vloss))

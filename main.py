@@ -17,7 +17,7 @@ import shutil
 
 from data import create_dataset
 from models import ForwardPredictionLSTM
-from train import train_epochs_transformer
+from train import train_epochs_forward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, DROPOUT, ATTENTION, HIDDEN_UNITS, NUM_LSTMS, STEP_SIZE, GAMMA
 
@@ -74,17 +74,11 @@ if __name__ == '__main__':
     print()
 
     # Create model
-    max_src_seq_len = forward_train_dataset.max_src_seq_len
-    max_tgt_seq_len = forward_train_dataset.max_tgt_seq_len
-
-    # Get input length and output length
-    TrainIter = iter(forward_train_dataloader)
-    input_first, output_first = next(TrainIter)
-    input_len = len(input_first[0])
-    out_len = len(output_first[0])
+    input_len = forward_train_dataset.max_src_seq_len
+    out_len = forward_train_dataset.max_tgt_seq_len
 
     model = ForwardPredictionLSTM(attention=ATTENTION, input_len=input_len, hidden_units=HIDDEN_UNITS, out_len=out_len,
-                                  num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS)
+                                  num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
 
     for p in model.parameters():
         if p.dim() > 1:
@@ -94,14 +88,14 @@ if __name__ == '__main__':
     # See https://andyljones.tumblr.com/post/110998971763/an-explanation-of-xavier-initialization
     # for a mathematical explanation.
 
-    loss_fn_MSE = MSELoss(reduction='sum').to(device)
+    loss_fn_MSE = MSELoss().to(device)
     forward_optimizer_Adam = Adam(model.parameters(), lr=LEARNING_RATE)
 
     # See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html
     step_lr = StepLR(forward_optimizer_Adam, step_size=STEP_SIZE, gamma=GAMMA, verbose=True)
 
     # Train
-    model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_transformer(
+    model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
         training_loader=forward_train_dataloader, test_loader=forward_test_dataloader, model=model,
         loss_fn=loss_fn_MSE, optimizer=forward_optimizer_Adam,
         scheduler=step_lr, epochs=EPOCHS)

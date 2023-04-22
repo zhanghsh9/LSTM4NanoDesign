@@ -133,17 +133,26 @@ class GoldNanorodSingle(Dataset):
                      self.norm_l[j][i] / r[j][i], self.norm_t[j][i]])
             normal00.append(temp)
         normal00 = torch.Tensor(normal00)
+
+        TL = [[0 for j in range(len(data['TL'][i]))] for i in range(len(data['TL']))]
+        TR = [[0 for j in range(len(data['TL'][i]))] for i in range(len(data['TL']))]
+
+        for i in range(len(data['TL'])):
+            for j in range(len(data['TL'][i])):
+                TL[i][j] = data['TL'][i][j] / 1000.
+                TR[i][j] = data['TR'][i][j] / 1000.
+
         if reverse:
             if use_TL:
-                self.normal00 = [l[::sample_rate] for l in data['TL']]
+                self.normal00 = [l[::sample_rate] for l in TL]
             else:
-                self.normal00 = [l[::sample_rate] for l in data['TR']]
+                self.normal00 = [l[::sample_rate] for l in TR]
             self.spectra = normal00
         else:
             if use_TL:
-                self.spectra = [l[::sample_rate] for l in data['TL']]
+                self.spectra = [l[::sample_rate] for l in TL]
             else:
-                self.spectra = [l[::sample_rate] for l in data['TR']]
+                self.spectra = [l[::sample_rate] for l in TR]
             self.normal00 = normal00
 
         # Get seq len
@@ -152,8 +161,8 @@ class GoldNanorodSingle(Dataset):
         self.max_src_seq_len = int(max(self.src_len))
         self.max_tgt_seq_len = int(max(self.tgt_len))
 
-        self.normal00 = torch.Tensor(self.normal00).to(torch.int32)
-        self.spectra = torch.Tensor(self.spectra).to(torch.int32)
+        self.normal00 = torch.Tensor(self.normal00)
+        self.spectra = torch.Tensor(self.spectra)
 
     def __len__(self):
         return len(self.normal00)
