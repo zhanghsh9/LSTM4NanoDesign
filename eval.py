@@ -55,8 +55,8 @@ if __name__ == '__main__':
             voutputs, _ = forward_model(vinputs)
 
             for j in range(len(vlabels)):
-                plt1, = plt.plot(lamda, vlabels.cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutputs.cpu(), label='Prediction')
+                plt1, = plt.plot(lamda, vlabels[0, :].cpu(), label='Real')
+                plt2, = plt.plot(lamda, voutputs[0, :].cpu(), label='Prediction')
                 mse_loss = loss_fn(vlabels, voutputs).item()
                 mse_loss_sum += mse_loss
                 plt.legend()

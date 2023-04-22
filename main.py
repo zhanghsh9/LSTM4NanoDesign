@@ -73,59 +73,64 @@ if __name__ == '__main__':
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
-    # Create model
-    input_len = forward_train_dataset.max_src_seq_len
-    out_len = forward_train_dataset.max_tgt_seq_len
+    for ATTENTION in range(1, 11, 2):
 
-    model = ForwardPredictionLSTM(attention=ATTENTION, input_len=input_len, hidden_units=HIDDEN_UNITS, out_len=out_len,
-                                  num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
+        print('ATTENTION = {}'.format(ATTENTION))
 
-    for p in model.parameters():
-        if p.dim() > 1:
-            nn.init.xavier_uniform_(p)
-    # This code is very important! It initialises the parameters with a range of values that stops the signal fading or
-    # getting too big.
-    # See https://andyljones.tumblr.com/post/110998971763/an-explanation-of-xavier-initialization
-    # for a mathematical explanation.
+        # Create model
+        input_len = forward_train_dataset.max_src_seq_len
+        out_len = forward_train_dataset.max_tgt_seq_len
 
-    loss_fn_MSE = MSELoss().to(device)
-    forward_optimizer_Adam = Adam(model.parameters(), lr=LEARNING_RATE)
+        model = ForwardPredictionLSTM(attention=ATTENTION, input_len=input_len, hidden_units=HIDDEN_UNITS,
+                                      out_len=out_len, num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
 
-    # See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html
-    step_lr = StepLR(forward_optimizer_Adam, step_size=STEP_SIZE, gamma=GAMMA, verbose=True)
+        for p in model.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+        # This code is very important! It initialises the parameters with a range of values that stops the signal fading or
+        # getting too big.
+        # See https://andyljones.tumblr.com/post/110998971763/an-explanation-of-xavier-initialization
+        # for a mathematical explanation.
 
-    # Train
-    model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
-        training_loader=forward_train_dataloader, test_loader=forward_test_dataloader, model=model,
-        loss_fn=loss_fn_MSE, optimizer=forward_optimizer_Adam,
-        scheduler=step_lr, epochs=EPOCHS)
+        loss_fn_MSE = MSELoss().to(device)
+        forward_optimizer_Adam = Adam(model.parameters(), lr=LEARNING_RATE)
 
-    # Save model
-    model_name = 'Forward_epochs_{}_lstms_{}_hidden_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS)
-    if os.path.exists(os.path.join(model_save_path, model_name)):
-        os.remove(os.path.join(model_save_path, model_name))
-    torch.save(model, os.path.join(model_save_path, model_name))
+        # See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html
+        step_lr = StepLR(forward_optimizer_Adam, step_size=STEP_SIZE, gamma=GAMMA, verbose=True)
 
-    # Draw loss figure
-    figs_name = 'loss_forward_{}.png'.format(time_now)
-    # plt.axes(yscale="log")
-    plt1, = plt.plot(x_axis_loss, loss_record, label='loss')
-    plt2, = plt.plot(x_axis_vloss, vloss_record, label='vloss')
-    plt.legend()
-    plt.xlabel('epoch')
-    plt.ylabel('Loss')
-    plt.title('Loss to epochs, forward')
-    if os.path.exists(os.path.join(figs_save_path, figs_name)):
-        os.remove(os.path.join(figs_save_path, figs_name))
-    plt.savefig(os.path.join(figs_save_path, figs_name))
-    plt.show()
+        # Train
+        model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
+            training_loader=forward_train_dataloader, test_loader=forward_test_dataloader, model=model,
+            loss_fn=loss_fn_MSE, optimizer=forward_optimizer_Adam,
+            scheduler=step_lr, epochs=EPOCHS)
 
-    loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
-                 'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'NUM_LSTMS': NUM_LSTMS,
-                 'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA}
-    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss.mat'), mdict=loss_save)
+        # Save model
+        model_name = 'Forward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS,
+                                                                               ATTENTION)
+        if os.path.exists(os.path.join(model_save_path, model_name)):
+            os.remove(os.path.join(model_save_path, model_name))
+        torch.save(model, os.path.join(model_save_path, model_name))
 
-    end_time = time.time()
-    print()
-    print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
-                                           time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
+        # Draw loss figure
+        figs_name = 'loss_forward_attn_{}.png'.format(ATTENTION)
+        # plt.axes(yscale="log")
+        plt1, = plt.plot(x_axis_loss, loss_record, label='loss')
+        plt2, = plt.plot(x_axis_vloss, vloss_record, label='vloss')
+        plt.legend()
+        plt.xlabel('epoch')
+        plt.ylabel('Loss')
+        plt.title('Loss to epochs, forward')
+        if os.path.exists(os.path.join(figs_save_path, figs_name)):
+            os.remove(os.path.join(figs_save_path, figs_name))
+        plt.savefig(os.path.join(figs_save_path, figs_name))
+        plt.show()
+
+        loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
+                     'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'NUM_LSTMS': NUM_LSTMS,
+                     'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA}
+        scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_attn{}.mat'.format(ATTENTION)), mdict=loss_save)
+
+        end_time = time.time()
+        print()
+        print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
+                                               time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
