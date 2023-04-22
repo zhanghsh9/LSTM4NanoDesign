@@ -1,5 +1,5 @@
 clear all
-load("C:\Users\HSZhang.NANO\Desktop\script\data\comb_2_5086.mat")
+load("C:\Users\HSZhang.NANO\Desktop\script\data\comb_2_6086.mat")
 notmal00=int64(normal00);
 TL=int64(TL*1000);
 TR=int64(TR*1000);
@@ -23,8 +23,8 @@ TR(idx,:)=[];
 normal00=[normal00;temp_normal_step];
 TL=[TL;temp_TL_step];
 TR=[TR;temp_TR_step];
-save('C:\Users\HSZhang.NANO\Desktop\Transformer\data\comb_2_5086_train.mat','normal00','TL','TR');
+save('C:\Users\HSZhang.NANO\Desktop\lstm_final\data\comb_2_6086_train.mat','normal00','TL','TR');
 normal00=temp_normal00_test;
 TL=temp_TL_test;
 TR=temp_TR_test;
-save('C:\Users\HSZhang.NANO\Desktop\Transformer\data\comb_2_5086_test.mat','normal00','TL','TR');
+save('C:\Users\HSZhang.NANO\Desktop\lstm_final\data\comb_2_6086_test.mat','normal00','TL','TR');
