@@ -69,7 +69,6 @@ class BackwardPredictionLSTM(nn.Module):
         self.num_lstms = num_lstms
 
         # Layers
-        self.fixed_attention = FixedAttention(attention)
         self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units, num_layers=num_layers, batch_first=True)
         self.lstms = get_clones(
             nn.LSTM(input_size=hidden_units, hidden_size=hidden_units, num_layers=num_layers, batch_first=True),
