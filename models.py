@@ -43,6 +43,7 @@ class ForwardPredictionLSTM(nn.Module):
         self.lstms = get_clones(
             nn.LSTM(input_size=hidden_units, hidden_size=hidden_units, num_layers=num_layers, batch_first=True),
             num_lstms)
+        self.feedforward = nn.Linear(hidden_units, hidden_units)
         self.fc1 = nn.Linear(hidden_units, out_len)
 
     def forward(self, x):
@@ -50,7 +51,7 @@ class ForwardPredictionLSTM(nn.Module):
         modified_x = F.relu(self.encoder(modified_x)[0])
         for i in range(self.num_lstms):
             modified_x = F.relu(self.lstms[i](modified_x)[0])
-        # out = self.lstm(modified_x, None)
+
+        modified_x = F.relu(modified_x + self.feedforward(self.feedforward))  # residual
         out = self.fc1(modified_x)
         return out, self.hidden
-
