@@ -52,7 +52,7 @@ class ForwardPredictionLSTM(nn.Module):
         for i in range(self.num_lstms):
             modified_x = F.relu(self.lstms[i](modified_x)[0])
 
-        modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
+        # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         out = self.fc1(modified_x)
         return out, self.hidden
 
@@ -81,6 +81,6 @@ class BackwardPredictionLSTM(nn.Module):
         for i in range(self.num_lstms):
             modified_x = F.relu(self.lstms[i](modified_x)[0])
 
-        modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
+        # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         out = self.fc1(modified_x)
         return out, self.hidden

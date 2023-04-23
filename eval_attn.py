@@ -40,15 +40,14 @@ if __name__ == '__main__':
                                                                                         NUM_LAYERS)
     '''
 
-    attn_list = [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5]
+    attn_list = [0., 1., 2., 3., 4.]
     forward_model = []
     loss_fn = MSELoss()
     mse_loss_sum = [0 for _ in range(len(attn_list))]
     lamda = range(900, 1801, 3 * SAMPLE_RATE)
 
     for ii in range(len(attn_list)):
-        model_name = 'Forward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS,
-                                                                               attn_list[ii])
+        model_name = 'Forward_mse_vloss_best_attn_{}.pth'.format(attn_list[ii])
         forward_model.append(torch.load(os.path.join(model_save_path, model_name)))
         forward_model[ii].to(device)
         forward_model[ii].eval()
@@ -80,7 +79,8 @@ if __name__ == '__main__':
                 plt.show()
 
     for ii in range(len(attn_list)):
-        print('Attention = {}, MSE = {}'.format(attn_list[ii], mse_loss_sum[ii] / (i + 1)))
+        mse_loss_sum[ii] = mse_loss_sum[ii] / (i + 1)
+        print('Attention = {}, MSE = {}'.format(attn_list[ii], mse_loss_sum[ii]))
 
     plt1, = plt.plot(attn_list, mse_loss_sum, label='MSE')
     plt.legend()
