@@ -30,10 +30,14 @@ class FixedAttention(nn.Module):
 class ForwardPredictionLSTM(nn.Module):
     def __init__(self, attention, input_len, hidden_units, out_len, num_layers, num_lstms):
         super(ForwardPredictionLSTM, self).__init__()
+
+        # Parameters
         self.hidden_size = hidden_units
         self.num_layers = num_layers
         self.hidden = None
         self.num_lstms = num_lstms
+
+        # Layers
         self.fixed_attention = FixedAttention(attention)
         self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units, num_layers=num_layers, batch_first=True)
         self.lstms = get_clones(
