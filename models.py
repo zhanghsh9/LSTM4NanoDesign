@@ -55,3 +55,33 @@ class ForwardPredictionLSTM(nn.Module):
         modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         out = self.fc1(modified_x)
         return out, self.hidden
+
+
+# Using tandem NN
+class BackwardPredictionLSTM(nn.Module):
+    def __init__(self, attention, input_len, hidden_units, out_len, num_layers, num_lstms):
+        super(BackwardPredictionLSTM, self).__init__()
+
+        # Parameters
+        self.hidden_size = hidden_units
+        self.num_layers = num_layers
+        self.hidden = None
+        self.num_lstms = num_lstms
+
+        # Layers
+        self.fixed_attention = FixedAttention(attention)
+        self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units, num_layers=num_layers, batch_first=True)
+        self.lstms = get_clones(
+            nn.LSTM(input_size=hidden_units, hidden_size=hidden_units, num_layers=num_layers, batch_first=True),
+            num_lstms)
+        self.feedforward = nn.Linear(hidden_units, hidden_units)
+        self.fc1 = nn.Linear(hidden_units, out_len)
+
+    def forward(self, x):
+        modified_x = F.relu(self.encoder(x)[0])
+        for i in range(self.num_lstms):
+            modified_x = F.relu(self.lstms[i](modified_x)[0])
+
+        modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
+        out = self.fc1(modified_x)
+        return out, self.hidden
