@@ -111,7 +111,7 @@ if __name__ == '__main__':
         forward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
             training_loader=forward_train_dataloader, test_loader=forward_test_dataloader, model=forward_model,
             loss_fn=forward_loss_fn_MSE, optimizer=forward_optimizer_Adam, scheduler=forward_step_lr,
-            attention=ATTENTION, epochs=EPOCHS)
+            attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS)
 
         # Save model
         model_name = 'Forward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS,
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         forward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_backward(
             training_loader=backward_train_dataloader, test_loader=backward_test_dataloader,
             backward_model=backward_model, loss_fn=backward_loss_fn_MSE, optimizer=backward_optimizer_Adam,
-            scheduler=backward_step_lr, attention=ATTENTION, epochs=EPOCHS)
+            scheduler=backward_step_lr, attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS)
 
         model_name = 'Backward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS,
                                                                                 ATTENTION)

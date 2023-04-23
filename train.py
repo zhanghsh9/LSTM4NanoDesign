@@ -57,9 +57,11 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
     return epoch_loss / (i + 1)
 
 
-def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler, attention, epochs=EPOCHS):
+def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler, attention, timestamp,
+                         epochs=EPOCHS):
     """
     Train transformer for epochs
+    :param timestamp: str
     :param attention: double
     :param scheduler: torch.optim.lr_scheduler.StepLR
     :param epochs: int
@@ -78,7 +80,6 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     x_axis_vloss = []
 
     # Save model path
-    timestamp = datetime.now().strftime('%Y%m%d')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
 
     # Train
@@ -183,9 +184,10 @@ def train_one_epoch_backward(training_loader, optimizer, backward_model, forward
 
 
 def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn, optimizer, scheduler, attention,
-                          epochs=EPOCHS):
+                          timestamp, epochs=EPOCHS):
     """
     Train backward model for epochs
+    :param timestamp: str
     :param backward_model: torch.nn.Module
     :param attention: double
     :param scheduler: torch.optim.lr_scheduler.StepLR
@@ -204,7 +206,6 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
     x_axis_vloss = []
 
     # Save model path
-    timestamp = datetime.now().strftime('%Y%m%d')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
 
     # Load forward model

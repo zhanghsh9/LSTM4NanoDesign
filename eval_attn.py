@@ -40,7 +40,7 @@ if __name__ == '__main__':
                                                                                         NUM_LAYERS)
     '''
 
-    attn_list = [1, 3, 5, 7, 9]
+    attn_list = [0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5]
     forward_model = []
     loss_fn = MSELoss()
     mse_loss_sum = [0 for _ in range(len(attn_list))]
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     for ii in range(len(attn_list)):
         model_name = 'Forward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS,
-                                                                           attn_list[ii])
+                                                                               attn_list[ii])
         forward_model.append(torch.load(os.path.join(model_save_path, model_name)))
         forward_model[ii].to(device)
         forward_model[ii].eval()
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         for i, data in enumerate(forward_test_dataloader):
             vinputs, vlabels = data
             vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
-            voutputs=[]
+            voutputs = []
             for ii in range(len(attn_list)):
                 voutput, _ = forward_model[ii](vinputs)
                 voutputs.append(voutput)
@@ -91,4 +91,3 @@ if __name__ == '__main__':
         os.remove(os.path.join(figs_save_path, 'MST_Attn.png'))
     plt.savefig(os.path.join(figs_save_path, 'MST_Attn.png'))
     plt.show()
-
