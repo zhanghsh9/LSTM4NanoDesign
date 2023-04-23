@@ -73,7 +73,7 @@ if __name__ == '__main__':
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
-    for ATTENTION in range(1, 11, 2):
+    for ATTENTION in [i/2. for i in range(13)]:
 
         print('ATTENTION = {}'.format(ATTENTION))
 
@@ -101,8 +101,8 @@ if __name__ == '__main__':
         # Train
         model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
             training_loader=forward_train_dataloader, test_loader=forward_test_dataloader, model=model,
-            loss_fn=loss_fn_MSE, optimizer=forward_optimizer_Adam,
-            scheduler=step_lr, epochs=EPOCHS)
+            loss_fn=loss_fn_MSE, optimizer=forward_optimizer_Adam, scheduler=step_lr, attention=ATTENTION,
+            epochs=EPOCHS)
 
         # Save model
         model_name = 'Forward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS,

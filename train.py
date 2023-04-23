@@ -59,9 +59,10 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
     return epoch_loss / (i + 1)
 
 
-def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler, epochs=EPOCHS):
+def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler, attention, epochs=EPOCHS):
     """
     Train transformer for epochs
+    :param attention: double
     :param scheduler: torch.optim.lr_scheduler.StepLR
     :param epochs: int
     :param test_loader: torch.utils.data.DataLoader
@@ -120,7 +121,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
 
             elif avg_vloss < best_vloss:
                 # Save model
-                model_name = 'Forward_mse_vloss_best.pth'
+                model_name = 'Forward_mse_vloss_best_attn_{}.pth'.format(attention)
                 if os.path.exists(os.path.join(model_save_path, model_name)):
                     os.remove(os.path.join(model_save_path, model_name))
                 torch.save(model, os.path.join(model_save_path, model_name))
