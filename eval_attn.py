@@ -87,7 +87,7 @@ if __name__ == '__main__':
     plt.xlabel('Attention')
     plt.ylabel('MSE')
     plt.title('MSE to attention')
-    if os.path.exists(os.path.join(figs_save_path, 'MST_Attn.png')):
-        os.remove(os.path.join(figs_save_path, 'MST_Attn.png'))
-    plt.savefig(os.path.join(figs_save_path, 'MST_Attn.png'))
+    if os.path.exists(os.path.join(figs_save_path, 'MSE_Attn.png')):
+        os.remove(os.path.join(figs_save_path, 'MSE_Attn.png'))
+    plt.savefig(os.path.join(figs_save_path, 'MSE_Attn.png'))
     plt.show()
