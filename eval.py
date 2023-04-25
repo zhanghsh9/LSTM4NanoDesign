@@ -30,8 +30,8 @@ if __name__ == '__main__':
 
     # Create dataloader
     transform = transforms.Compose([transforms.ToTensor()])
-    _, forward_test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, reverse=False, use_TL=True,
-                                             transform=transform, sample_rate=SAMPLE_RATE)
+    _, forward_test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL=True, transform=transform,
+                                             sample_rate=SAMPLE_RATE)
     forward_test_dataloader = DataLoader(forward_test_dataset, batch_size=1, shuffle=False,
                                          num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
     # Forward prediction
