@@ -30,14 +30,13 @@ if __name__ == '__main__':
     backward_vloss_rec = []
 
     # Get device
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
-    device = "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
     print('Running on {}'.format(device))
     print()
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20230424'
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)

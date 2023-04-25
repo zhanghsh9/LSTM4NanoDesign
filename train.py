@@ -9,7 +9,7 @@ import random
 from parameters import EPOCHS, VALID_FREQ, RESULTS_PATH, MODEL_PATH
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-device = 'cpu'
+# device = 'cpu'
 
 
 def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
