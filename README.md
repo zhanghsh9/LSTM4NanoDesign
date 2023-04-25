@@ -1,6 +1,6 @@
 # LSTM4NanoDesign
 
-This is git repo of Surface plasmon light field control based on machine learning.
+This is the git repo of Surface plasmon light field control based on machine learning.
 
 ## Environment
 ```text
