@@ -59,7 +59,7 @@ class ForwardPredictionLSTM(nn.Module):
 
 # Using tandem NN
 class BackwardPredictionLSTM(nn.Module):
-    def __init__(self, attention, input_len, hidden_units, out_len, num_layers, num_lstms):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, num_lstms):
         super(BackwardPredictionLSTM, self).__init__()
 
         # Parameters

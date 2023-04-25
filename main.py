@@ -144,10 +144,11 @@ if __name__ == '__main__':
         print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
                                                time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
 
-        start_time = time.time()
         # Backward
-        backward_model = BackwardPredictionLSTM(attention=ATTENTION, input_len=input_len, hidden_units=HIDDEN_UNITS,
-                                                out_len=out_len, num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
+        start_time = time.time()
+        print(input_len, out_len)
+        backward_model = BackwardPredictionLSTM(input_len=out_len, hidden_units=HIDDEN_UNITS, out_len=input_len,
+                                                num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
 
         for p in backward_model.parameters():
             if p.dim() > 1:
