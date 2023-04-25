@@ -37,6 +37,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
+    timestamp='20230424'
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -61,7 +62,7 @@ if __name__ == '__main__':
                                           num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
     forward_test_dataloader = DataLoader(forward_test_dataset, batch_size=BATCH_SIZE, shuffle=False,
                                          num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
-
+    '''
     backward_train_dataset, backward_test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, reverse=True,
                                                                    use_TL=True, transform=transform,
                                                                    sample_rate=SAMPLE_RATE)
@@ -69,7 +70,7 @@ if __name__ == '__main__':
                                            num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
     backward_test_dataloader = DataLoader(forward_test_dataset, batch_size=BATCH_SIZE, shuffle=False,
                                           num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
-
+    '''
     print('{}: Using dataset:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
     print('Train:')
@@ -88,7 +89,7 @@ if __name__ == '__main__':
         # Create model
         input_len = forward_train_dataset.max_src_seq_len
         out_len = forward_train_dataset.max_tgt_seq_len
-
+        '''
         forward_model = ForwardPredictionLSTM(attention=ATTENTION, input_len=input_len, hidden_units=HIDDEN_UNITS,
                                               out_len=out_len, num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
 
@@ -143,10 +144,10 @@ if __name__ == '__main__':
         print()
         print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
                                                time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
-
+        '''
         # Backward
         start_time = time.time()
-        print(input_len, out_len)
+        # print(input_len, out_len)
         backward_model = BackwardPredictionLSTM(input_len=out_len, hidden_units=HIDDEN_UNITS, out_len=input_len,
                                                 num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
 
@@ -159,8 +160,8 @@ if __name__ == '__main__':
 
         backward_step_lr = StepLR(backward_optimizer_Adam, step_size=STEP_SIZE, gamma=GAMMA, verbose=True)
 
-        forward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_backward(
-            training_loader=backward_train_dataloader, test_loader=backward_test_dataloader,
+        backward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_backward(
+            training_loader=forward_train_dataloader, test_loader=forward_test_dataloader,
             backward_model=backward_model, loss_fn=backward_loss_fn_MSE, optimizer=backward_optimizer_Adam,
             scheduler=backward_step_lr, attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS)
 

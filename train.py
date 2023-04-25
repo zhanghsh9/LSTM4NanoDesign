@@ -157,11 +157,11 @@ def train_one_epoch_backward(training_loader, optimizer, backward_model, forward
         inputs, labels = data
         inputs, labels = inputs.float().to(device), labels.float().to(device)
 
-        outputs, _ = backward_model(inputs)
+        outputs, _ = backward_model(labels)
         outputs_forward, _ = forward_model(outputs)
 
         optimizer.zero_grad()
-        loss = loss_fn(outputs_forward, inputs)
+        loss = loss_fn(outputs_forward, labels)
         loss.backward()
         optimizer.step()
 
@@ -219,7 +219,7 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
 
     # Train
     for epoch in range(epochs):
-        print('{}: Forward EPOCH {}:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), epoch + 1))
+        print('{}: Backward EPOCH {}:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), epoch + 1))
         backward_model.train(True)
         avg_loss = train_one_epoch_backward(training_loader=training_loader, backward_model=backward_model,
                                             forward_model=forward_model, loss_fn=loss_fn, optimizer=optimizer)
@@ -239,10 +239,10 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
                 vinputs, vlabels = vdata
                 vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
 
-                voutputs, _ = backward_model(vinputs)
+                voutputs, _ = backward_model(vlabels)
                 voutputs_forward, _ = backward_model(voutputs)
 
-                vloss = loss_fn(voutputs_forward, vinputs).item()
+                vloss = loss_fn(voutputs_forward, vlabels).item()
                 running_vloss += vloss
 
             avg_vloss = running_vloss / (i + 1)
