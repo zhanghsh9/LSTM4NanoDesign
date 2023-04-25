@@ -30,14 +30,14 @@ if __name__ == '__main__':
     backward_vloss_rec = []
 
     # Get device
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    # device = "cpu"
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
     print('Running on {}'.format(device))
     print()
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp='20230424'
+    timestamp = '20230424'
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -55,30 +55,21 @@ if __name__ == '__main__':
     # Create dataset
     print('{}: Initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     transform = transforms.Compose([transforms.ToTensor()])
-    forward_train_dataset, forward_test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, reverse=False,
-                                                                 use_TL=True, transform=transform,
-                                                                 sample_rate=SAMPLE_RATE)
-    forward_train_dataloader = DataLoader(forward_train_dataset, batch_size=BATCH_SIZE, shuffle=True,
-                                          num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
-    forward_test_dataloader = DataLoader(forward_test_dataset, batch_size=BATCH_SIZE, shuffle=False,
-                                         num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
-    '''
-    backward_train_dataset, backward_test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, reverse=True,
-                                                                   use_TL=True, transform=transform,
-                                                                   sample_rate=SAMPLE_RATE)
-    backward_train_dataloader = DataLoader(forward_train_dataset, batch_size=BATCH_SIZE, shuffle=True,
-                                           num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
-    backward_test_dataloader = DataLoader(forward_test_dataset, batch_size=BATCH_SIZE, shuffle=False,
-                                          num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
-    '''
+    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL=True, transform=transform,
+                                                 sample_rate=SAMPLE_RATE)
+    train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,
+                                  num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False,
+                                 num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
+
     print('{}: Using dataset:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
     print('Train:')
-    forward_train_dataset.print()
-    forward_train_dataset.print_item(0)
+    train_dataset.print()
+    train_dataset.print_item(0)
     print()
     print('Test:')
-    forward_test_dataset.print()
+    test_dataset.print()
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
@@ -87,9 +78,11 @@ if __name__ == '__main__':
         print('ATTENTION = {}'.format(ATTENTION))
 
         # Create model
-        input_len = forward_train_dataset.max_src_seq_len
-        out_len = forward_train_dataset.max_tgt_seq_len
+        input_len = train_dataset.max_src_seq_len
+        out_len = train_dataset.max_tgt_seq_len
         '''
+        # Forward
+        print('{}: Forward'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
         forward_model = ForwardPredictionLSTM(attention=ATTENTION, input_len=input_len, hidden_units=HIDDEN_UNITS,
                                               out_len=out_len, num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
 
@@ -110,7 +103,7 @@ if __name__ == '__main__':
 
         # Train
         forward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
-            training_loader=forward_train_dataloader, test_loader=forward_test_dataloader, model=forward_model,
+            training_loader=train_dataloader, test_loader=test_dataloader, model=forward_model,
             loss_fn=forward_loss_fn_MSE, optimizer=forward_optimizer_Adam, scheduler=forward_step_lr,
             attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS)
 
@@ -147,7 +140,7 @@ if __name__ == '__main__':
         '''
         # Backward
         start_time = time.time()
-        # print(input_len, out_len)
+        print('{}: Backward'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
         backward_model = BackwardPredictionLSTM(input_len=out_len, hidden_units=HIDDEN_UNITS, out_len=input_len,
                                                 num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
 
@@ -161,15 +154,15 @@ if __name__ == '__main__':
         backward_step_lr = StepLR(backward_optimizer_Adam, step_size=STEP_SIZE, gamma=GAMMA, verbose=True)
 
         backward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_backward(
-            training_loader=forward_train_dataloader, test_loader=forward_test_dataloader,
-            backward_model=backward_model, loss_fn=backward_loss_fn_MSE, optimizer=backward_optimizer_Adam,
-            scheduler=backward_step_lr, attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS)
+            training_loader=train_dataloader, test_loader=test_dataloader, backward_model=backward_model,
+            loss_fn=backward_loss_fn_MSE, optimizer=backward_optimizer_Adam, scheduler=backward_step_lr,
+            attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS)
 
         model_name = 'Backward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS,
                                                                                 ATTENTION)
         if os.path.exists(os.path.join(model_save_path, model_name)):
             os.remove(os.path.join(model_save_path, model_name))
-        torch.save(forward_model, os.path.join(model_save_path, model_name))
+        torch.save(backward_model, os.path.join(model_save_path, model_name))
 
         # Draw loss figure
         figs_name = 'loss_backward_attn_{}.png'.format(ATTENTION)

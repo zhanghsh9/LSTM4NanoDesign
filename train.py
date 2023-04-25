@@ -9,6 +9,7 @@ import random
 from parameters import EPOCHS, VALID_FREQ, RESULTS_PATH, MODEL_PATH
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+device = 'cpu'
 
 
 def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
@@ -240,7 +241,7 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
                 vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
 
                 voutputs, _ = backward_model(vlabels)
-                voutputs_forward, _ = backward_model(voutputs)
+                voutputs_forward, _ = forward_model(voutputs)
 
                 vloss = loss_fn(voutputs_forward, vlabels).item()
                 running_vloss += vloss

@@ -14,6 +14,7 @@ from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BAT
     EPOCHS, NUM_LAYERS, NUM_LSTMS, HIDDEN_UNITS
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = 'cpu'
 
 if __name__ == '__main__':
     time_now = int(time.strftime("%Y%m%d%H%M%S", time.localtime()))

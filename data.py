@@ -41,12 +41,11 @@ def entire_normalize(data):
     return normalized_data, data_mean, data_var
 
 
-def create_dataset(data_path=DATA_PATH, rods=RODS, reverse=False, use_TL=True, transform=None, sample_rate=SAMPLE_RATE):
+def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL=True, transform=None, sample_rate=SAMPLE_RATE):
     """
     Create dataset
     :param data_path: str
     :param rods: int or str
-    :param reverse: bool
     :param use_TL: bool
     :param transform: torchvision.transforms
     :param sample_rate: int
@@ -61,23 +60,22 @@ def create_dataset(data_path=DATA_PATH, rods=RODS, reverse=False, use_TL=True, t
     print('Using {} as test data'.format(test_data_path))
     print()
 
-    train_dataset = GoldNanorodSingle(data_path=train_data_path, reverse=reverse, use_TL=use_TL,
-                                      transform=transform, sample_rate=sample_rate)
-    test_dataset = GoldNanorodSingle(data_path=test_data_path, reverse=reverse, use_TL=use_TL, transform=transform,
+    train_dataset = GoldNanorodSingle(data_path=train_data_path, use_TL=use_TL, transform=transform,
+                                      sample_rate=sample_rate)
+    test_dataset = GoldNanorodSingle(data_path=test_data_path, use_TL=use_TL, transform=transform,
                                      sample_rate=sample_rate)
 
     return train_dataset, test_dataset
 
 
 class GoldNanorodSingle(Dataset):
-    def __init__(self, data_path=DATA_PATH, rods=RODS, reverse=False, use_TL=True, transform=None,
+    def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL=True, transform=None,
                  sample_rate=SAMPLE_RATE):
         data = scio.loadmat(data_path)
 
         # Parameters
         self.data_path = data_path
         self.rods = rods
-        self.reverse = reverse
         self.use_TL = use_TL
         self.transform = transform
         self.sample_rate = sample_rate
@@ -142,18 +140,11 @@ class GoldNanorodSingle(Dataset):
                 TL[i][j] = data['TL'][i][j] / 1000.
                 TR[i][j] = data['TR'][i][j] / 1000.
 
-        if reverse:
-            if use_TL:
-                self.normal00 = [l[::sample_rate] for l in TL]
-            else:
-                self.normal00 = [l[::sample_rate] for l in TR]
-            self.spectra = normal00
+        if use_TL:
+            self.spectra = [l[::sample_rate] for l in TL]
         else:
-            if use_TL:
-                self.spectra = [l[::sample_rate] for l in TL]
-            else:
-                self.spectra = [l[::sample_rate] for l in TR]
-            self.normal00 = normal00
+            self.spectra = [l[::sample_rate] for l in TR]
+        self.normal00 = normal00
 
         # Get seq len
         self.src_len = torch.Tensor([len(l) for l in self.normal00]).to(torch.int32)
