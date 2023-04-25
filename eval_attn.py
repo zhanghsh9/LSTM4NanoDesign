@@ -122,7 +122,8 @@ if __name__ == '__main__':
         print('Attention = {}, forward MSE = {}, backward MSE = {}'.format(attn_list[ii], forward_mse_loss_sum[ii],
                                                                            backward_mse_loss_sum[ii]))
 
-    plt1, = plt.plot(attn_list, forward_mse_loss_sum, label='MSE')
+    plt1, = plt.plot(attn_list, forward_mse_loss_sum, label='forward')
+    plt2, = plt.plot(attn_list, backward_mse_loss_sum, label='backward')
     plt.legend()
     plt.xlabel('Attention')
     plt.ylabel('MSE')
