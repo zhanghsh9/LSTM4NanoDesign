@@ -167,7 +167,6 @@ class GoldNanorodSingle(Dataset):
         print('class GoldNanorodSingle with: ')
         print('data path = {}'.format(self.data_path))
         print('rods = {}'.format(self.rods))
-        print('reverse = {}'.format(self.reverse))
         print('use TL = {}'.format(self.use_TL))
         print('transform = {}'.format(self.transform))
         print('spectrum sample rate = {}'.format(self.sample_rate))
