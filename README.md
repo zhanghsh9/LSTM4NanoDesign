@@ -40,3 +40,9 @@ Evaluation:
 ```commandline
 python eval.py
 ```
+
+or
+
+```commandline
+python eval_attn.py
+```
