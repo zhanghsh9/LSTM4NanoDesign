@@ -47,12 +47,6 @@ or
 python eval_attn.py
 ```
 
-Dataset:
-
-```text
-
-```
-
 Trained model, 150 epochs:
 
 ```text
