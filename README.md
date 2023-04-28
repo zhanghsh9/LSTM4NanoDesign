@@ -50,5 +50,7 @@ python eval_attn.py
 Trained model, 150 epochs:
 
 ```text
-
+百度网盘：
+url: https://pan.baidu.com/s/1xf_w-FSIplY6Z9ddWnZLIQ
+password: x5gn 
 ```
