@@ -37,6 +37,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
+    timestamp = '20230426'
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -72,14 +73,14 @@ if __name__ == '__main__':
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
-    for ATTENTION in [i for i in range(6)]:
+    for ATTENTION in [4.5, 5.5]:
 
         print('ATTENTION = {}'.format(ATTENTION))
 
         # Create model
         input_len = train_dataset.max_src_seq_len
         out_len = train_dataset.max_tgt_seq_len
-
+        '''
         # Forward
         print('{}: Forward'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
         forward_model = ForwardPredictionLSTM(attention=ATTENTION, input_len=input_len, hidden_units=HIDDEN_UNITS,
@@ -136,7 +137,7 @@ if __name__ == '__main__':
         print()
         print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
                                                time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
-
+        '''
         # Backward
         start_time = time.time()
         print('{}: Backward'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
@@ -176,6 +177,12 @@ if __name__ == '__main__':
             os.remove(os.path.join(figs_save_path, figs_name))
         plt.savefig(os.path.join(figs_save_path, figs_name))
         plt.show()
+
+        loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
+                     'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'NUM_LSTMS': NUM_LSTMS,
+                     'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA}
+        scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_attn_backward{}.mat'.format(ATTENTION)),
+                     mdict=loss_save)
 
         end_time = time.time()
         print()
