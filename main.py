@@ -80,7 +80,7 @@ if __name__ == '__main__':
         # Create model
         input_len = train_dataset.max_src_seq_len
         out_len = train_dataset.max_tgt_seq_len
-        '''
+
         # Forward
         print('{}: Forward'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
         forward_model = ForwardPredictionLSTM(attention=ATTENTION, input_len=input_len, hidden_units=HIDDEN_UNITS,
@@ -137,7 +137,7 @@ if __name__ == '__main__':
         print()
         print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
                                                time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
-        '''
+
         # Backward
         start_time = time.time()
         print('{}: Backward'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
