@@ -4,14 +4,14 @@ This is the git repo of Surface plasmon light field control based on machine lea
 
 ## Environment
 ```text
-python = 3.10
-CUDA = 11.7
-pytorch = 2.0.0
+python = 3.11
+CUDA = 12.1
+pytorch = 2.3.1
 scipy = 1.10.1
-numpy = 1.23.5
-matplotlib = 3.7.1
+numpy = 1.24.3
+matplotlib = 3.8.4
 ```
-Running on NVIDIA RTX 3080
+Running on NVIDIA RTX 4070 Ti Super
 
 ## How to run
 Train-Test split:

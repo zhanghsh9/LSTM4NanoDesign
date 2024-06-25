@@ -16,7 +16,7 @@ SAMPLE_RATE = 10
 # Model
 # See https://datascience.stackexchange.com/questions/93768/dimensions-of-transformer-dmodel-and-depth
 ATTENTION = 10
-HIDDEN_UNITS = 1024
+HIDDEN_UNITS = [1024]
 DROPOUT = 0.1
 NUM_LAYERS = 1
 NUM_LSTMS = 3

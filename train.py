@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
 
 from datetime import datetime
 import time
@@ -8,11 +9,18 @@ import random
 
 from parameters import EPOCHS, VALID_FREQ, RESULTS_PATH, MODEL_PATH
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-# device = 'cpu'
+# Get device
+if not torch.cuda.is_available():
+    raise RuntimeError('CUDA is not available')
+else:
+    device = torch.device('cuda')
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
+    # print(f'Running on {device} version = {torch.version.cuda}')
+    # print()
 
 
-def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
+def train_one_epoch_forward(training_loader, optimizer, model, loss_fn=nn.MSELoss()):
     """
 
     :param training_loader: DataLoader
@@ -41,6 +49,7 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
         loss.backward()
         optimizer.step()
 
+        # Print loss info per 64 batch
         if i % 64 == 0:
             if i == 0:
                 last_loss = running_loss
@@ -59,7 +68,7 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn):
 
 
 def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler, attention, timestamp,
-                         epochs=EPOCHS):
+                         epochs=EPOCHS, start_epoch=0):
     """
     Train transformer for epochs
     :param timestamp: str
@@ -82,9 +91,11 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
 
     # Save model path
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
+    if not os.path.exists(model_save_path):
+        os.makedirs(model_save_path)
 
     # Train
-    for epoch in range(epochs):
+    for epoch in range(start_epoch, epochs):
         print('{}: Forward EPOCH {}:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), epoch + 1))
         model.train(True)
         avg_loss = train_one_epoch_forward(training_loader=training_loader, model=model, loss_fn=loss_fn,
@@ -131,6 +142,23 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
             x_axis_vloss.append(epoch + 1)
         else:
             print('{}: Training Loss:{}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), avg_loss))
+
+        # Save checkpoint
+        model_checkpoint_path = os.path.join(model_save_path, 'forward_checkpoint.pth')
+        torch.save(model, model_checkpoint_path)
+
+        checkpoint = {
+            'epoch': epoch + 1,
+            'optimizer_state_dict': optimizer.state_dict(),
+            'avg_loss': avg_loss,
+            'loss_fn': loss_fn,
+            'attention': attention,
+            'timestamp': timestamp,
+            'vloss_record': vloss_record,
+            'x_axis_vloss': x_axis_vloss
+        }
+        checkpoint_path = os.path.join(model_save_path, 'forward_states.pth')
+        torch.save(checkpoint, checkpoint_path)
 
         print()
         loss_record.append(float(avg_loss))
@@ -268,7 +296,51 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
         else:
             print('{}: Training Loss:{}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), avg_loss))
 
+            # Save checkpoint
+            model_checkpoint_path = os.path.join(model_save_path, 'backward_checkpoint.pth')
+            torch.save(backward_model, model_checkpoint_path)
+
+            checkpoint = {
+                'epoch': epoch + 1,
+                'optimizer_state_dict': optimizer.state_dict(),
+                'avg_loss': avg_loss,
+                'loss_fn': loss_fn,
+                'attention': attention,
+                'timestamp': timestamp,
+                'vloss_record': vloss_record,
+                'x_axis_vloss': x_axis_vloss
+            }
+            checkpoint_path = os.path.join(model_save_path, 'backward_states.pth')
+            torch.save(checkpoint, checkpoint_path)
+
         print()
         loss_record.append(float(avg_loss))
         x_axis_loss.append(epoch + 1)
     return backward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record
+
+
+def load_checkpoint(checkpoint_path, forward):
+    """
+    Load the model and optimizer state from a checkpoint file.
+
+    :param checkpoint_path: str, path to the checkpoint file
+    :param forward: Whether is loading forward model (True) or backward model (False)
+    :return: loaded model and states
+    """
+    if forward:
+        model = torch.load(os.path.join(checkpoint_path, 'forward_checkpoint.pth'))
+        checkpoint = torch.load(os.path.join(checkpoint_path, 'forward_states.pth'))
+    else:
+        model = torch.load(os.path.join(checkpoint_path, 'backward_checkpoint.pth'))
+        checkpoint = torch.load(os.path.join(checkpoint_path, 'backward_states.pth'))
+
+    optimizer = torch.load_state_dict(checkpoint['optimizer_state_dict'])
+    epoch = checkpoint['epoch']
+    loss = checkpoint['avg_loss']
+    loss_fn = checkpoint['loss_fn']
+    attention = checkpoint['attention']
+    timestamp = checkpoint['timestamp']
+    vloss_record = checkpoint['vloss_record']
+    x_axis_vloss = checkpoint['x_axis_vloss']
+
+    return model, optimizer, epoch, loss, loss_fn, attention, timestamp, vloss_record, x_axis_vloss
