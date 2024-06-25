@@ -7,8 +7,8 @@ This is the git repo of Surface plasmon light field control based on machine lea
 python = 3.11
 CUDA = 12.1
 pytorch = 2.3.1
-scipy = 1.10.1
-numpy = 1.24.3
+scipy = 1.14.0
+numpy = 2.0.0
 matplotlib = 3.8.4
 ```
 Running on NVIDIA RTX 4070 Ti Super
