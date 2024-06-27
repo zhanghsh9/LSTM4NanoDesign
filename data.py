@@ -16,6 +16,7 @@ def get_filename(path, rods):
     :param rods: int
     :return: filename
     """
+
     for root, dirs, files in os.walk(path):
         for name in files:
             if int(name[5]) == rods:
@@ -60,33 +61,43 @@ def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL=True, transform=None, 
     print('Using {} as test data'.format(test_data_path))
     print()
 
-    train_dataset = GoldNanorodSingle(data_path=train_data_path, use_TL=use_TL, transform=transform,
+    train_dataset = GoldNanorodSingle(data_path=train_data_path, use_TL_TR=use_TL, transform=transform,
                                       sample_rate=sample_rate)
-    test_dataset = GoldNanorodSingle(data_path=test_data_path, use_TL=use_TL, transform=transform,
+    test_dataset = GoldNanorodSingle(data_path=test_data_path, use_TL_TR=use_TL, transform=transform,
                                      sample_rate=sample_rate)
 
     return train_dataset, test_dataset
 
 
 class GoldNanorodSingle(Dataset):
-    def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL=True, transform=None,
-                 sample_rate=SAMPLE_RATE):
+    def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
+                 sample_rate=SAMPLE_RATE, make_spectrum_int=True):
         data = scio.loadmat(data_path)
 
         # Parameters
         self.data_path = data_path
         self.rods = rods
-        self.use_TL = use_TL
+        self.use_TL_TR = use_TL_TR
         self.transform = transform
         self.sample_rate = sample_rate
+        self.make_spectrum_int = make_spectrum_int
 
+        # Process parameter vectors
+        '''
         x = [[] for j in range(int(len(data['normal00'][0]) / 6))]
         y = [[] for j in range(int(len(data['normal00'][0]) / 6))]
         z = [[] for j in range(int(len(data['normal00'][0]) / 6))]
         l = [[] for j in range(int(len(data['normal00'][0]) / 6))]
         r = [[] for j in range(int(len(data['normal00'][0]) / 6))]
         t = [[] for j in range(int(len(data['normal00'][0]) / 6))]
-
+        
+        x = data['x']
+        y = data['y']
+        z = data['z']
+        l = data['l']
+        r = data['r']
+        t = data['t']
+        
         self.norm_x = [[] for j in range(int(len(data['normal00'][0]) / 6))]
         self.norm_y = [[] for j in range(int(len(data['normal00'][0]) / 6))]
         self.norm_z = [[] for j in range(int(len(data['normal00'][0]) / 6))]
@@ -103,7 +114,7 @@ class GoldNanorodSingle(Dataset):
         self.l_var = [0 for j in range(int(len(data['normal00'][0]) / 6))]
         self.t_mean = [0 for j in range(int(len(data['normal00'][0]) / 6))]
         self.t_var = [0 for j in range(int(len(data['normal00'][0]) / 6))]
-
+        
         # De-package
         for i in range(len(data['normal00'])):
             for j in range(int(len(data['normal00'][i]) / 6)):
@@ -113,6 +124,7 @@ class GoldNanorodSingle(Dataset):
                 l[j].append(int(data['normal00'][i][6 * j + 3]))
                 r[j].append(data['normal00'][i][6 * j + 3] / data['normal00'][i][6 * j + 4])
                 t[j].append(int(data['normal00'][i][6 * j + 5]))
+        
 
         # Normalize
         for i in range(len(x)):
@@ -121,7 +133,7 @@ class GoldNanorodSingle(Dataset):
             self.norm_z[i], self.z_mean[i], self.z_var[i] = entire_normalize(z[i])
             self.norm_l[i], self.l_mean[i], self.l_var[i] = entire_normalize(l[i])
             self.norm_t[i], self.t_mean[i], self.t_var[i] = entire_normalize(t[i])
-
+        
         normal00 = []
         for i in range(len(data['normal00'])):
             temp = []
@@ -130,36 +142,67 @@ class GoldNanorodSingle(Dataset):
                     [self.norm_x[j][i], self.norm_y[j][i], self.norm_z[j][i], self.norm_l[j][i],
                      self.norm_l[j][i] / r[j][i], self.norm_t[j][i]])
             normal00.append(temp)
-        normal00 = torch.Tensor(normal00)
+        '''
+        norm_normal00 = data['norm_normal00']
+        self.norm_normal00 = torch.Tensor(norm_normal00)
+        self.x_mean = data['x_mean']
+        self.x_std = data['x_std']
+        self.y_mean = data['y_mean']
+        self.y_std = data['y_std']
+        self.z_mean = data['z_mean']
+        self.z_std = data['z_std']
+        self.l_mean = data['l_mean']
+        self.l_std = data['l_std']
+        self.t_mean = data['t_mean']
+        self.t_std = data['t_std']
+        self.r = data['r']
 
+        '''
         TL = [[0 for j in range(len(data['TL'][i]))] for i in range(len(data['TL']))]
-        TR = [[0 for j in range(len(data['TL'][i]))] for i in range(len(data['TL']))]
+        TR = [[0 for j in range(len(data['TR'][i]))] for i in range(len(data['TR']))]
+        TL_TR = [[0 for j in range(len(data['TL_TR'][i]))] for i in range(len(data['TL_TR']))]
+        '''
 
-        for i in range(len(data['TL'])):
-            for j in range(len(data['TL'][i])):
-                TL[i][j] = data['TL'][i][j] / 1000.
-                TR[i][j] = data['TR'][i][j] / 1000.
-
-        if use_TL:
-            self.spectra = [l[::sample_rate] for l in TL]
+        if self.make_spectrum_int:
+            TL = data['TL_int']
+            TR = data['TR_int']
+            TL_TR = data['TL_TR_int']
         else:
-            self.spectra = [l[::sample_rate] for l in TR]
-        self.normal00 = normal00
+            TL = data['TL_float']
+            TR = data['TR_float']
+            TL_TR = data['TL_TR_float']
+
+            '''
+            for i in range(len(data['TL'])):
+                for j in range(len(data['TL'][i])):
+                    TL[i][j] = data['TL'][i][j] / 1000.
+                    TR[i][j] = data['TR'][i][j] / 1000.
+
+            for i in range(len(data['TL_TR'])):
+                for j in range(len(data['TL_TR'][i])):
+                    TL_TR[i][j] = data['TL_TR'][i][j] / 1000.
+            '''
+
+        if self.use_TL_TR:
+            self.spectra = [l[::sample_rate] for l in TL_TR]
+        else:
+            self.spectra = [l[::sample_rate] for l in TL]
+        # self.norm_normal00 = norm_normal00
 
         # Get seq len
-        self.src_len = torch.Tensor([len(l) for l in self.normal00]).to(torch.int32)
+        self.src_len = torch.Tensor([len(l) for l in self.norm_normal00]).to(torch.int32)
         self.tgt_len = torch.Tensor([len(l) for l in self.spectra]).to(torch.int32)
         self.max_src_seq_len = int(max(self.src_len))
         self.max_tgt_seq_len = int(max(self.tgt_len))
 
-        self.normal00 = torch.Tensor(self.normal00)
+        # self.norm_normal00 = torch.Tensor(self.norm_normal00)
         self.spectra = torch.Tensor(self.spectra)
 
     def __len__(self):
-        return len(self.normal00)
+        return len(self.norm_normal00)
 
     def __getitem__(self, index):
-        paras = self.normal00[index]
+        paras = self.norm_normal00[index]
         result = self.spectra[index]
         return paras, result
 
@@ -167,12 +210,13 @@ class GoldNanorodSingle(Dataset):
         print('class GoldNanorodSingle with: ')
         print('data path = {}'.format(self.data_path))
         print('rods = {}'.format(self.rods))
-        print('use TL = {}'.format(self.use_TL))
+        print('use TL_TR = {}'.format(self.use_TL_TR))
+        print('make spectrum integer = {}'.format(self.make_spectrum_int))
         print('transform = {}'.format(self.transform))
         print('spectrum sample rate = {}'.format(self.sample_rate))
-        print('source size = [{}, {}]'.format(len(self.normal00), self.max_src_seq_len))
+        print('source size = [{}, {}]'.format(len(self.norm_normal00), self.max_src_seq_len))
         print('target size = [{}, {}]'.format(len(self.spectra), self.max_tgt_seq_len))
 
     def print_item(self, index):
-        print('source = {}'.format(self.normal00[index]))
+        print('source = {}'.format(self.norm_normal00[index]))
         print('target = {}'.format(self.spectra[index]))
