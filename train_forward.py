@@ -16,8 +16,8 @@ import time
 import shutil
 
 from data import create_dataset
-from models import ForwardPredictionLSTM, BackwardPredictionLSTM
-from train import train_epochs_forward, train_epochs_backward
+from models import ForwardPredictionLSTM
+from train import train_epochs_forward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, ATTENTION, HIDDEN_UNITS, STEP_SIZE, GAMMA
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
-    for ATTENTION in [4.5, 5.5]:
+    for ATTENTION in np.arange(1, 5.5, 0.5).tolist():
 
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: ATTENTION = {ATTENTION}')
 
@@ -136,57 +136,6 @@ if __name__ == '__main__':
                      'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'NUM_LSTMS': NUM_LSTMS,
                      'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA}
         scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_attn{}.mat'.format(ATTENTION)), mdict=loss_save)
-
-        end_time = time.time()
-        print()
-        print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
-                                               time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
-
-        # Backward
-        start_time = time.time()
-        print('{}: Backward'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
-        backward_model = BackwardPredictionLSTM(input_len=out_len, hidden_units=HIDDEN_UNITS, out_len=input_len,
-                                                num_layers=NUM_LAYERS, num_lstms=NUM_LSTMS).to(device)
-
-        for p in backward_model.parameters():
-            if p.dim() > 1:
-                nn.init.xavier_uniform_(p)
-
-        backward_loss_fn_MSE = MSELoss().to(device)
-        backward_optimizer_Adam = Adam(backward_model.parameters(), lr=LEARNING_RATE)
-
-        backward_step_lr = StepLR(backward_optimizer_Adam, step_size=STEP_SIZE, gamma=GAMMA, verbose=True)
-
-        backward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_backward(
-            training_loader=train_dataloader, test_loader=test_dataloader, backward_model=backward_model,
-            loss_fn=backward_loss_fn_MSE, optimizer=backward_optimizer_Adam, scheduler=backward_step_lr,
-            attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS)
-
-        model_name = 'Backward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(EPOCHS, NUM_LSTMS, HIDDEN_UNITS,
-                                                                                ATTENTION)
-        if os.path.exists(os.path.join(model_save_path, model_name)):
-            os.remove(os.path.join(model_save_path, model_name))
-        torch.save(backward_model, os.path.join(model_save_path, model_name))
-
-        # Draw loss figure
-        figs_name = 'loss_backward_attn_{}.png'.format(ATTENTION)
-        # plt.axes(yscale="log")
-        plt1, = plt.plot(x_axis_loss, loss_record, label='loss')
-        plt2, = plt.plot(x_axis_vloss, vloss_record, label='vloss')
-        plt.legend()
-        plt.xlabel('epoch')
-        plt.ylabel('Loss')
-        plt.title('Loss to epochs, backward')
-        if os.path.exists(os.path.join(figs_save_path, figs_name)):
-            os.remove(os.path.join(figs_save_path, figs_name))
-        plt.savefig(os.path.join(figs_save_path, figs_name))
-        plt.show()
-
-        loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
-                     'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'NUM_LSTMS': NUM_LSTMS,
-                     'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA}
-        scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_attn_backward{}.mat'.format(ATTENTION)),
-                     mdict=loss_save)
 
         end_time = time.time()
         print()

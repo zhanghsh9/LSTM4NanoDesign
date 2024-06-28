@@ -44,9 +44,9 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn=nn.MSELos
         outputs, _ = model(inputs)
 
         loss = loss_fn(outputs, labels)
+        loss.backward()
         running_loss += loss.item()
         epoch_loss += loss.item()
-        loss.backward()
         optimizer.step()
 
         # Print loss info per 64 batch
@@ -67,10 +67,11 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn=nn.MSELos
     return epoch_loss / (i + 1)
 
 
-def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler, attention, timestamp,
-                         epochs=EPOCHS, start_epoch=0):
+def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler,
+                         attention, timestamp, epochs=EPOCHS, start_epoch=0):
     """
     Train transformer for epochs
+    :param start_epoch: int
     :param timestamp: str
     :param attention: double
     :param scheduler: torch.optim.lr_scheduler.StepLR
@@ -96,15 +97,16 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
 
     # Train
     for epoch in range(start_epoch, epochs):
-        print('{}: Forward EPOCH {}:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), epoch + 1))
+        print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward EPOCH {epoch + 1}:')
         model.train(True)
         avg_loss = train_one_epoch_forward(training_loader=training_loader, model=model, loss_fn=loss_fn,
                                            optimizer=optimizer)
         scheduler.step()
+        scheduler.get_last_lr()
 
         # See https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/5
-        if device == 'cuda':
-            torch.cuda.empty_cache()
+        # if device == 'cuda':
+            # torch.cuda.empty_cache()
 
         # Eval
         if epoch % VALID_FREQ == 0 or epoch + 1 == epochs:
@@ -119,11 +121,10 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
                 voutputs, _ = model(vinputs)
 
                 vloss = loss_fn(voutputs, vlabels)
-                running_vloss += vloss
+                running_vloss += vloss.item()
 
             avg_vloss = running_vloss / (i + 1)
-            print('{}: LOSS train: {}, valid: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
-                                                         avg_loss, avg_vloss))
+            print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: LOSS train: {avg_loss}, valid: {avg_vloss}')
             vloss_record.append(float(avg_vloss))
             x_axis_vloss.append(epoch + 1)
 
