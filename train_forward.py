@@ -16,7 +16,7 @@ import time
 import shutil
 
 from data import create_dataset
-from models import ForwardPredictionLSTM
+from models import ForwardFixAttentionLSTM
 from train import train_epochs_forward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, ATTENTION, HIDDEN_UNITS, STEP_SIZE, GAMMA
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         out_len = train_dataset.max_tgt_seq_len
         # Forward
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward')
-        forward_model = ForwardPredictionLSTM(attention=ATTENTION, input_len=input_len,
+        forward_model = ForwardFixAttentionLSTM(attention=ATTENTION, input_len=input_len,
                                               hidden_units=HIDDEN_UNITS, out_len=out_len,
                                               num_layers=NUM_LAYERS).to(device)
 
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         plt.show()
 
         loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
-                     'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'NUM_LSTMS': NUM_LSTMS,
+                     'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS,
                      'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA}
         scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_attn{}.mat'.format(ATTENTION)), mdict=loss_save)
 

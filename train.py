@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 
 from datetime import datetime
+import matplotlib.pyplot as plt
 import time
 import os
 import random
@@ -95,6 +96,15 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
 
+    # Set up interactive mode for matplotlib
+    plt.ion()
+    fig, ax = plt.subplots()
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Loss')
+    train_line, = ax.plot([], [], label='Training Loss')
+    val_line, = ax.plot([], [], label='Validation Loss')
+    plt.legend()
+
     # Train
     for epoch in range(start_epoch, epochs):
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward EPOCH {epoch + 1}:')
@@ -102,7 +112,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
         avg_loss = train_one_epoch_forward(training_loader=training_loader, model=model, loss_fn=loss_fn,
                                            optimizer=optimizer)
         scheduler.step()
-        scheduler.get_last_lr()
+        print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Epoch: {epoch + 1}  Learning Rate: {scheduler.get_last_lr()}')
 
         # See https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/5
         # if device == 'cuda':
@@ -164,6 +174,17 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
         print()
         loss_record.append(float(avg_loss))
         x_axis_loss.append(epoch + 1)
+
+        # Update the plot
+        train_line.set_xdata(x_axis_loss)
+        train_line.set_ydata(loss_record)
+        val_line.set_xdata(x_axis_vloss)
+        val_line.set_ydata(vloss_record)
+        ax.relim()
+        ax.autoscale_view()
+        fig.canvas.draw()
+        fig.canvas.flush_events()
+
     return model, x_axis_loss, x_axis_vloss, loss_record, vloss_record
 
 
