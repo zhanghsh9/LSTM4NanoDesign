@@ -2,9 +2,11 @@ import torch
 from torch.utils.data import Dataset
 import torch.nn.functional as F
 
+import numpy as np
 import scipy.io as scio
 import os
 from math import sqrt
+import time
 
 from parameters import DATA_PATH, RODS, SAMPLE_RATE
 
@@ -42,12 +44,15 @@ def entire_normalize(data):
     return normalized_data, data_mean, data_var
 
 
-def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL=True, transform=None, sample_rate=SAMPLE_RATE):
+def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
+                   sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=torch.device('cuda')):
     """
     Create dataset
+    :param device:
+    :param make_spectrum_int:
     :param data_path: str
     :param rods: int or str
-    :param use_TL: bool
+    :param use_TL_TR: bool
     :param transform: torchvision.transforms
     :param sample_rate: int
     :return: dataset
@@ -57,21 +62,21 @@ def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL=True, transform=None, 
 
     train_data_path = os.path.join(DATA_PATH, train_filename)
     test_data_path = os.path.join(DATA_PATH, test_filename)
-    print('Using {} as training data'.format(train_data_path))
-    print('Using {} as test data'.format(test_data_path))
+    print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Using {train_data_path} as training data')
+    print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Using {test_data_path} as test data')
     print()
 
-    train_dataset = GoldNanorodSingle(data_path=train_data_path, use_TL_TR=use_TL, transform=transform,
-                                      sample_rate=sample_rate)
-    test_dataset = GoldNanorodSingle(data_path=test_data_path, use_TL_TR=use_TL, transform=transform,
-                                     sample_rate=sample_rate)
+    train_dataset = GoldNanorodSingle(data_path=train_data_path, use_TL_TR=use_TL_TR, transform=transform,
+                                      sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
+    test_dataset = GoldNanorodSingle(data_path=test_data_path, use_TL_TR=use_TL_TR, transform=transform,
+                                     sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
 
     return train_dataset, test_dataset
 
 
 class GoldNanorodSingle(Dataset):
     def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
-                 sample_rate=SAMPLE_RATE, make_spectrum_int=True):
+                 sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=torch.device('cuda')):
         data = scio.loadmat(data_path)
 
         # Parameters
@@ -81,6 +86,7 @@ class GoldNanorodSingle(Dataset):
         self.transform = transform
         self.sample_rate = sample_rate
         self.make_spectrum_int = make_spectrum_int
+        self.device = device
 
         # Process parameter vectors
         '''
@@ -144,7 +150,7 @@ class GoldNanorodSingle(Dataset):
             normal00.append(temp)
         '''
         norm_normal00 = data['norm_normal00']
-        self.norm_normal00 = torch.Tensor(norm_normal00)
+        self.norm_normal00 = torch.Tensor(norm_normal00, device=device)
         self.x_mean = data['x_mean']
         self.x_std = data['x_std']
         self.y_mean = data['y_mean']
@@ -184,19 +190,19 @@ class GoldNanorodSingle(Dataset):
             '''
 
         if self.use_TL_TR:
-            self.spectra = [l[::sample_rate] for l in TL_TR]
+            self.spectra = [list(l[::sample_rate]) for l in TL_TR]
         else:
-            self.spectra = [l[::sample_rate] for l in TL]
+            self.spectra = [list(l[::sample_rate]) for l in TL]
         # self.norm_normal00 = norm_normal00
 
         # Get seq len
-        self.src_len = torch.Tensor([len(l) for l in self.norm_normal00]).to(torch.int32)
-        self.tgt_len = torch.Tensor([len(l) for l in self.spectra]).to(torch.int32)
+        self.src_len = torch.Tensor([len(l) for l in self.norm_normal00], device=device).to(torch.int32)
+        self.tgt_len = torch.Tensor([len(l) for l in self.spectra], device=device).to(torch.int32)
         self.max_src_seq_len = int(max(self.src_len))
         self.max_tgt_seq_len = int(max(self.tgt_len))
 
         # self.norm_normal00 = torch.Tensor(self.norm_normal00)
-        self.spectra = torch.Tensor(self.spectra)
+        self.spectra = torch.Tensor(self.spectra, device=device)
 
     def __len__(self):
         return len(self.norm_normal00)
@@ -210,6 +216,7 @@ class GoldNanorodSingle(Dataset):
         print('class GoldNanorodSingle with: ')
         print('data path = {}'.format(self.data_path))
         print('rods = {}'.format(self.rods))
+        print('device = {}'.format(self.device))
         print('use TL_TR = {}'.format(self.use_TL_TR))
         print('make spectrum integer = {}'.format(self.make_spectrum_int))
         print('transform = {}'.format(self.transform))

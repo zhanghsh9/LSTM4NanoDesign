@@ -32,10 +32,10 @@ TR(idx,:)=[];
 % Seperate int and float of spectrum
 TL_float=[TL;temp_TL_step];
 TR_float=[TR;temp_TR_step];
-TL_TR_float=horzcat(TL, TR);
+TL_TR_float=horzcat(TL_float, TR_float);
 
-TL_int=int64([TL;temp_TL_step]*1000);
-TR_int=int64([TR;temp_TR_step]*1000);
+TL_int=int64(TL_float*1000);
+TR_int=int64(TR_float*1000);
 TL_TR_int=horzcat(TL_int, TR_int);
 
 % Process and save train dataset

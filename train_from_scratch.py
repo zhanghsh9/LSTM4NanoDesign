@@ -59,8 +59,8 @@ if __name__ == '__main__':
     # Create dataset
     print('{}: Initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL=True, transform=transform,
-                                                 sample_rate=SAMPLE_RATE)
+    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=transform,
+                                                 sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
     train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,
                                   num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
     test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False,
@@ -74,6 +74,7 @@ if __name__ == '__main__':
     print()
     print('Test:')
     test_dataset.print()
+    test_dataset.print_item(0)
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
