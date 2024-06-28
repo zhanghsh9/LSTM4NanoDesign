@@ -11,23 +11,32 @@
 %中不生成。
 
 clear all;
-
+load("C:\Users\zhanghsh\Desktop\script\Lumerical\normal20220225.mat");
+normal_temp=normal00;
+load("C:\Users\zhanghsh\Desktop\script\Lumerical\normal20220225add.mat");
+normal_temp=[normal_temp;normal00];
+load("C:\Users\zhanghsh\Desktop\script\Lumerical\normal20220225add2.mat");
+normal_temp=[normal_temp;normal00];
+load("C:\Users\zhanghsh\Desktop\normal20221108.mat");
+normal_temp=[normal_temp;normal00];
+load("C:\Users\zhanghsh\Desktop\normal20221110.mat");
+normal_temp=[normal_temp;normal00];
 %样本数量num
-num=1000;
+num=200;
 
 %确定n
 n = 2;
 
 %确定Px的范围
-rangepx = 400:5:400;%400nm-400nm,每隔5个点取一个点，可调
-rangepy = 400:5:400;%400nm-400nm,每隔5个点取一个点，可调
+rangepx = 260:5:260;%400nm-400nm,每隔5个点取一个点，可调
+rangepy = 260:5:260;%400nm-400nm,每隔5个点取一个点，可调
 
 
 %确定(z,l,w,theta)各参数的范围
 rangeZ = -300:10:300;%-300nm-300nm，每10个点取一个
-rangel = 60:5:300;%60-300nm，每5个点取一个
-rangelwr = 2:0.2:10;%10-150nm
-rangetheta = -90:5:90;%-90°-90°，每5个点取一个
+rangel = 60:5:200;%60-300nm，每5个点取一个
+rangelwr = 2:0.2:8;%10-150nm
+rangetheta = -45:5:45;%-90°-90°，每5个点取一个
 
 %声明随机数矩阵，矩阵每一行为((x,y,z,l,w,theta)*n,Px,Py,n)
 %normal00：既不存在(1)也不存在(2)
@@ -80,7 +89,7 @@ while (row00<=num)||(row10<=num)||(row01<=num)||(row11<=num)
     end
     x = rangeX(randi(length(rangeX)));
     y = rangeY(randi(length(rangeY)));
-    z = rangeZ(randi(length(rangeZ)));
+    z = 0;
     theta = rangetheta(randi(length(rangetheta)));
     count = count+1;
     
@@ -115,8 +124,10 @@ while (row00<=num)||(row10<=num)||(row01<=num)||(row11<=num)
             else
                 if row00<=num
                     if ~ismember(temp,normal00,'rows')
-                        normal00(row00,:)=temp;
-                        row00=row00+1;
+                        if ~ismember(temp,normal_temp,'rows')
+                            normal00(row00,:)=temp;
+                            row00=row00+1;
+                        end
                     end
                 end
             end
@@ -125,6 +136,6 @@ while (row00<=num)||(row10<=num)||(row01<=num)||(row11<=num)
 end
 
 %保存
-save(['..\..\Lumerical\normal' ctime(1:8) '.mat'],'normal00','normal01','normal10','normal11','num')
+save(['C:\Users\zhanghsh\Desktop\script\Lumerical\normal' ctime(1:8) '_pace.mat'],'normal00','num')
 
 

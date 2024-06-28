@@ -1,0 +1,103 @@
+# Source should put above/below monitor
+# Only for normal incidence and specular order
+# The index of U & L monitor should be the same
+#clear;
+Uname = "T";		# upper monitor name
+Lname = "R";		# lower monitor name
+indU = 1.5;		# index of upper monitor
+indL = 1.5;		# index of lower monitor
+f=getdata(Uname,"f");   # get frequency vector
+
+#select('substrate'); # name of the structure
+#name1=get('material');
+#indL=getfdtdindex(name1,f,min(f),max(f));
+#select('H2O'); # name of the structure
+#name2=get('material');
+#indU=getfdtdindex(name2,f,min(f),max(f));
+
+sourcename = "source";
+expsign = 1;		# 1:export to .mat, 0:export to txt file
+
+fname = currentfilename;
+for(pos = i = 1;i > -1;0){
+    pos = i;
+    i = findstring(fname,"/",pos+1);
+}
+fname = substring(fname,pos+1);
+filename = substring(fname,1,length(fname)-4);
+
+lamda=c/f*1e9;
+
+sz = getresult(sourcename,"z");
+select(sourcename);
+direcsign = get("direction");
+if(direcsign == "Forward"){
+    lambdanum = mod(indL/lamda*1e9*(-sz),1);
+    ref = exp(1i*2*pi*lambdanum);
+    U = transmission(Uname);
+    L = 1-transmission(Lname);
+} else if(get("direction") == "Backward"){
+    lambdanum = mod(indU/lamda*1e9*sz,1);
+    ref = exp(1i*2*pi*lambdanum);
+    U = 1 + transmission(Uname);	# transmission of upper monitor
+    L = -transmission(Lname);		# transmission of lower monitor
+} else {
+    ?"Direction detection error!";
+}
+Lref = exp(1i*2*pi*mod(indL/lamda*1e9,1));
+Uref = exp(1i*2*pi*mod(indU/lamda*1e9,1));
+
+#select("substrate");
+#ind = str2num(get("index"));
+
+
+#Start calculate grating orders
+########################################################################
+GraU = matrix(length(f),3);
+GraL = matrix(length(f),3);
+
+ii_GS = 1:1:length(f);
+temp0 = gratingpolar(Uname,ii_GS,indU,1);
+temp1 = gratingpolar(Lname,ii_GS,indL,-1);
+
+orderUn = gratingn(Uname,ii_GS,indU);
+orderUm = gratingm(Uname,ii_GS,indU);
+nx = find(orderUn,0);
+ny = find(orderUm,0);
+GraU = transpose(pinch(temp0(nx,ny,:,:)));
+
+orderLn = gratingn(Lname,ii_GS,indL);
+orderLm = gratingm(Lname,ii_GS,indL);
+nx = find(orderLn,0);
+ny = find(orderLm,0);
+GraL = transpose(pinch(temp1(nx,ny,:,:)));
+
+#==End calculate grating order==
+
+#===================================
+# save data
+
+EthetaU = 1i*sqrt(U)*pinch(GraU,2,2)/ref/Uref;
+EphiU = 1i*sqrt(U)*pinch(GraU,2,3)/ref/Uref;
+EthetaL = 1i*sqrt(L)*pinch(GraL,2,2)/ref/Uref;
+EphiL = -1i*sqrt(L)*pinch(GraL,2,3)/ref/Uref;
+
+if(expsign){
+    matlabsave(filename,lamda,EthetaU,EphiU,EthetaL,EphiL);
+} else {
+    if(fileexists(filename+"_(0,0)_Upper_+1.txt")){
+        del(filename+"_(0,0)_Upper_+1.txt");
+    }
+    if(fileexists(filename+"_(0,0)_Lower_-1.txt")){
+        del(filename+"_(0,0)_Lower_-1.txt");
+    }
+    
+    for(ii_GS=1:length(f)){
+        str=num2str(lamda(ii_GS))+"	"+num2str(U(ii_GS))+"	"+num2str(real(EthetaU(ii_GS)))+"	"+num2str(imag(EthetaU(ii_GS)))+"	"+num2str(real(EphiU(ii_GS)))+"	"+num2str(imag(EphiU(ii_GS)));
+        str1=num2str(lamda(ii_GS))+"	"+num2str(L(ii_GS))+"	"+num2str(real(EthetaL(ii_GS)))+"	"+num2str(imag(EthetaL(ii_GS)))+"	"+num2str(real(EphiL(ii_GS)))+"	"+num2str(imag(EphiL(ii_GS)));
+        write(filename+"_(0,0)_Upper_+1.txt",str);
+        write(filename+"_(0,0)_Lower_-1.txt",str1);
+    }
+}
+?"Direction = " + direcsign;
+?"=====PROGRAM END======";

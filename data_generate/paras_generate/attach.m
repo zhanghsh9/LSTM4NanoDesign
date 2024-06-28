@@ -1,3 +1,6 @@
+load('C:\Users\zhanghsh\Desktop\script\Lumerical\normal20220225.mat');
+temp00=[30 116 131];
+
 %此脚本用于生成一组决定n根棒结构的随机数，同时对(1)有棒的端点落在fdtd范围外，(2)
 %有棒相互重叠这两种情况做了分类。最终生成的随机数存在以normal开头的数组中，格式
 %为[第一根棒的(x,y,z,l,w,theta) 第二根棒的(x,y,z,l,w,theta) ... 
@@ -10,34 +13,34 @@
 %一地确定一个含有n根棒的结构，但εm与εb变化范围较小，前期Px固定为500nm，在此脚本
 %中不生成。
 
-clear all;
+%clear all;
 
 %样本数量num
-num=1000;
+num=500;
 
 %确定n
 n = 2;
 
 %确定Px的范围
-rangepx = 400:5:400;%400nm-400nm,每隔5个点取一个点，可调
-rangepy = 400:5:400;%400nm-400nm,每隔5个点取一个点，可调
+rangepx = 500:5:500;%500nm-500nm,每隔5个点取一个点，可调
+rangepy = 500:5:500;%500nm-500nm,每隔5个点取一个点，可调
 
 
 %确定(z,l,w,theta)各参数的范围
-rangeZ = -300:10:300;%-300nm-300nm，每10个点取一个
-rangel = 60:5:300;%60-300nm，每5个点取一个
-rangelwr = 2:0.2:10;%10-150nm
-rangetheta = -90:5:90;%-90°-90°，每5个点取一个
+rangeZ = -300:1:300;%-300nm-300nm，每1个点取一个
+rangel = 1:1:450;%0-450nm，每1个点取一个
+rangew = 1:1:100;%0-100nm，每1个点取一个
+rangetheta = -90:1:90;%-90°-90°，每1个点取一个
 
 %声明随机数矩阵，矩阵每一行为((x,y,z,l,w,theta)*n,Px,Py,n)
 %normal00：既不存在(1)也不存在(2)
 %normal10：存在(1)但不存在(2)
 %normal01：存在(2)但不存在(1)
 %normal11：(1)和(2)均存在
-normal00 = zeros(num,6*n+4);
-normal10 = zeros(num,6*n+4);
-normal01 = zeros(num,6*n+4);%去掉注释以判断情况(2)
-normal11 = zeros(num,6*n+4);%去掉注释以判断情况(2)
+normal00add = zeros(num,6*n+4);
+normal10add = zeros(num,6*n+4);
+normal01add = zeros(num,6*n+4);%去掉注释以判断情况(2)
+normal11add = zeros(num,6*n+4);%去掉注释以判断情况(2)
 
 %开始生成随机数矩阵
 x = 0;
@@ -66,21 +69,18 @@ while (row00<=num)||(row10<=num)||(row01<=num)||(row11<=num)
     py = rangepy(randi(length(rangepy)));
     
     %确定(x,y)的范围
-    rangeX = -(px/2-30):10:(px/2-30);%在Px范围内取点，每10个取一个
-    rangeY = -(py/2-30):10:(py/2-30);%在Py范围内取点，每10个取一个
+    rangeX = -(px/2):1:(px/2);%在Px范围内取点，每5个取一个
+    rangeY = -(py/2):1:(py/2);%在Py范围内取点，每5个取一个
     
     %生成(x,y,z,l,w,theta)
-    l = rangel(randi(length(rangel)));
-    w = round(l/rangelwr(randi(length(rangelwr))));
-    if w<10
-        continue
-    end
-    if w>l
-        continue
-    end
     x = rangeX(randi(length(rangeX)));
     y = rangeY(randi(length(rangeY)));
     z = rangeZ(randi(length(rangeZ)));
+    l = rangel(randi(length(rangel)));
+    w = rangew(randi(length(rangew)));
+    if w>l
+        continue
+    end
     theta = rangetheta(randi(length(rangetheta)));
     count = count+1;
     
@@ -92,14 +92,14 @@ while (row00<=num)||(row10<=num)||(row01<=num)||(row11<=num)
             if if2(n,temp)
                 if row11<=num
                     if ~ismember(temp,normal11,'rows')
-                        normal11(row11,:)=temp;
+                        normal11add(row11,:)=temp;
                         row11=row11+1;
                     end
                 end
             else
-                if row10<=num
-                    if ~ismember(temp,normal10,'rows')
-                        normal10(row10,:)=temp;
+                if ~ismember(temp,normal10,'rows')
+                    if row10<=num
+                        normal10add(row10,:)=temp;
                         row10=row10+1;
                     end
                 end
@@ -108,14 +108,14 @@ while (row00<=num)||(row10<=num)||(row01<=num)||(row11<=num)
             if if2(n,temp)
                 if row01<=num
                     if ~ismember(temp,normal01,'rows')
-                        normal01(row01,:)=temp;
+                        normal01add(row01,:)=temp;
                         row01=row01+1;
                     end
                 end
             else
                 if row00<=num
                     if ~ismember(temp,normal00,'rows')
-                        normal00(row00,:)=temp;
+                        normal00add(row00,:)=temp;
                         row00=row00+1;
                     end
                 end
@@ -124,7 +124,28 @@ while (row00<=num)||(row10<=num)||(row01<=num)||(row11<=num)
     end
 end
 
-%保存
-save(['..\..\Lumerical\normal' ctime(1:8) '.mat'],'normal00','normal01','normal10','normal11','num')
+
+cont=1;
+for ii=temp00
+    normal00(ii,:)=normal00add(cont,:);
+    cont=cont+1;
+end
+% cont=1;
+% for ii=temp10
+%     normal10(ii,:)=normal10add(cont,:);
+%     cont=cont+1;
+% end
+% cont=1;
+% for ii=temp01
+%     normal01(ii,:)=normal01add(cont,:);
+%     cont=cont+1;
+% end
+% cont=1;
+% for ii=temp11
+%     normal11(ii,:)=normal11add(cont,:);
+%     cont=cont+1;
+% end
 
 
+
+save('C:\Users\zhanghsh\Desktop\script\Lumerical\normal20220225add2.mat','normal00','num','temp00')

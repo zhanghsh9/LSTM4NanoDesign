@@ -10,7 +10,7 @@ indicator = 0;
 % 2: structure is RS, so only xPolL & xPolU are needed
 % 9: structure is user defined
 
-bLocal = 'F:\Generated_Test\generate00\1\';
+bLocal = 'C:\Users\zhanghsh\Desktop\script\Generated_Test\generate00\1\';
 bName = {'xPolL';'xPolU';'yPolL';'yPolU'};
 % order: x polarization from lower; x polarization from upper; y
 % polarization from lower; y polarization from upper
