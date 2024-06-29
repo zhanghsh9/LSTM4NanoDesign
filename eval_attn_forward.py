@@ -60,18 +60,13 @@ if __name__ == '__main__':
     backward_mse_loss_sum = [0 for _ in range(len(attn_list))]
     lamda = range(900, 1801, 3 * SAMPLE_RATE)
 
+    # Load models
     for ii in range(len(attn_list)):
         # Forward model
         model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}_attn_{attn_list[ii]}.pth'
         forward_model.append(torch.load(os.path.join(model_save_path, model_name)))
         forward_model[ii].to(device)
         forward_model[ii].eval()
-
-        # Backward model
-        model_name = 'Backward_epochs_{}_lstms_{}_hidden_{}_attn_{}.pth'.format(150, 3, 1024, attn_list[ii])
-        backward_model.append(torch.load(os.path.join(model_save_path, model_name)))
-        backward_model[ii].to(device)
-        backward_model[ii].eval()
 
     with torch.no_grad():
         for i, data in enumerate(test_dataloader):
@@ -97,34 +92,11 @@ if __name__ == '__main__':
                 plt.savefig(os.path.join(figs_save_path, 'forward_{}.png'.format(i)))
                 plt.show()
 
-            # Backward
-            for j in range(len(vlabels)):
-                plt1, = plt.plot(lamda, vlabels[j, :].cpu(), label='Real')
-                for ii in range(len(attn_list)):
-                    voutput, _ = backward_model[ii](vlabels)
-                    voutput, _ = forward_model[ii](voutput)
-                    plt2, = plt.plot(lamda, voutput[0, :].cpu(), label='Attn_{}'.format(attn_list[ii]))
-                    mse_loss = backward_loss_fn(vlabels, voutput).item()
-                    backward_mse_loss_sum[ii] = backward_mse_loss_sum[ii] + mse_loss
-
-                plt.legend()
-                plt.xlabel('lambda(nm)')
-                plt.ylabel('TL')
-                plt.title('Backward')
-
-                if os.path.exists(os.path.join(figs_save_path, 'backward_{}.png'.format(i))):
-                    os.remove(os.path.join(figs_save_path, 'backward_{}.png'.format(i)))
-                plt.savefig(os.path.join(figs_save_path, 'backward_{}.png'.format(i)))
-                plt.show()
-
     for ii in range(len(attn_list)):
         forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] / (i + 1)
-        backward_mse_loss_sum[ii] = backward_mse_loss_sum[ii] / (i + 1)
-        print('Attention = {}, forward MSE = {}, backward MSE = {}'.format(attn_list[ii], forward_mse_loss_sum[ii],
-                                                                           backward_mse_loss_sum[ii]))
+        print(f'Attention = {attn_list[ii]}, forward MSE = {forward_mse_loss_sum[ii]}')
 
     plt1, = plt.plot(attn_list, forward_mse_loss_sum, label='forward')
-    plt2, = plt.plot(attn_list, backward_mse_loss_sum, label='backward')
     plt.legend()
     plt.xlabel('Attention')
     plt.ylabel('MSE')
@@ -137,3 +109,4 @@ if __name__ == '__main__':
     loss_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum,
                  'backward_mse_loss_sum': backward_mse_loss_sum}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_to_attn.mat'), mdict=loss_save)
+

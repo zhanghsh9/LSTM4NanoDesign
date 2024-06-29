@@ -13,10 +13,18 @@ from data import create_dataset
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     EPOCHS, NUM_LAYERS
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-# device = 'cpu'
 
 if __name__ == '__main__':
+    # Get device
+    if not torch.cuda.is_available():
+        raise RuntimeError('CUDA is not available')
+    else:
+        device = torch.device('cuda')
+        # device = "cuda" if torch.cuda.is_available() else "cpu"
+        # device = "cpu"
+        print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
+        print()
+
     time_now = int(time.strftime("%Y%m%d%H%M%S", time.localtime()))
     torch.manual_seed(time_now)
 
@@ -24,14 +32,14 @@ if __name__ == '__main__':
     print()
 
     # dir
-    timestamp = '20230422'
+    timestamp = '20240628'
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
     # Create dataloader
     transform = transforms.Compose([transforms.ToTensor()])
-    _, forward_test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL=True, transform=transform,
-                                             sample_rate=SAMPLE_RATE)
+    _, forward_test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=transform,
+                                                 sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
     forward_test_dataloader = DataLoader(forward_test_dataset, batch_size=1, shuffle=False,
                                          num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
     # Forward prediction
