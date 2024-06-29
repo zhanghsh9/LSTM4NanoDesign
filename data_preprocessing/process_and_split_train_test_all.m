@@ -3,7 +3,7 @@ ctime = datestr(now, 30);
 tseed = str2double(ctime((end - 5) : end));
 rand('seed', tseed);
 
-load("..\data\comb_2_6086_all.mat");
+load("..\data\comb_2_6493_all.mat");
 num_test=100;
 
 num_total=length(normal00);

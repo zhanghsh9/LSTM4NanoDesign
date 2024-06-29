@@ -150,7 +150,7 @@ class GoldNanorodSingle(Dataset):
             normal00.append(temp)
         '''
         norm_normal00 = data['norm_normal00']
-        self.norm_normal00 = torch.Tensor(norm_normal00, device=device)
+        self.norm_normal00 = torch.Tensor(norm_normal00)
         self.x_mean = data['x_mean']
         self.x_std = data['x_std']
         self.y_mean = data['y_mean']
@@ -196,13 +196,13 @@ class GoldNanorodSingle(Dataset):
         # self.norm_normal00 = norm_normal00
 
         # Get seq len
-        self.src_len = torch.Tensor([len(l) for l in self.norm_normal00], device=device).to(torch.int32)
-        self.tgt_len = torch.Tensor([len(l) for l in self.spectra], device=device).to(torch.int32)
+        self.src_len = torch.Tensor([len(l) for l in self.norm_normal00]).to(torch.int32)
+        self.tgt_len = torch.Tensor([len(l) for l in self.spectra]).to(torch.int32)
         self.max_src_seq_len = int(max(self.src_len))
         self.max_tgt_seq_len = int(max(self.tgt_len))
 
         # self.norm_normal00 = torch.Tensor(self.norm_normal00)
-        self.spectra = torch.Tensor(self.spectra, device=device)
+        self.spectra = torch.Tensor(self.spectra)
 
     def __len__(self):
         return len(self.norm_normal00)
