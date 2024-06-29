@@ -75,10 +75,10 @@ if __name__ == '__main__':
 
             # Forward
             for j in range(len(vlabels)):
-                plt1, = plt.plot(lamda, vlabels[j, :].cpu(), label='Real')
+                plt1, = plt.plot(lamda, vlabels[j, 0:301].cpu(), label='Real')
                 for ii in range(len(attn_list)):
                     voutput, _ = forward_model[ii](vinputs)
-                    plt2, = plt.plot(lamda, voutput[0, :].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
                     mse_loss = forward_loss_fn(vlabels, voutput).item()
                     forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] + mse_loss
 
