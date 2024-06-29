@@ -10,20 +10,11 @@ import random
 
 from parameters import EPOCHS, VALID_FREQ, RESULTS_PATH, MODEL_PATH
 
-# Get device
-if not torch.cuda.is_available():
-    raise RuntimeError('CUDA is not available')
-else:
-    device = torch.device('cuda')
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
-    # device = "cpu"
-    # print(f'Running on {device} version = {torch.version.cuda}')
-    # print()
 
-
-def train_one_epoch_forward(training_loader, optimizer, model, loss_fn=nn.MSELoss()):
+def train_one_epoch_forward(training_loader, optimizer, model, loss_fn=nn.MSELoss(), device=torch.device('cuda')):
     """
 
+    :param device:
     :param training_loader: DataLoader
     :param optimizer: torch.optim.Adam
     :param model: torch.nn.Module
@@ -69,9 +60,12 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn=nn.MSELos
 
 
 def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler,
-                         attention, timestamp, epochs=EPOCHS, start_epoch=0):
+                         attention, timestamp, epochs=EPOCHS, start_epoch=0, results_path=RESULTS_PATH,
+                         device=torch.device('cuda')):
     """
     Train transformer for epochs
+    :param device:
+    :param results_path:
     :param start_epoch: int
     :param timestamp: str
     :param attention: double
@@ -92,7 +86,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     x_axis_vloss = []
 
     # Save model path
-    model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
+    model_save_path = os.path.join(results_path, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
 
@@ -110,7 +104,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward EPOCH {epoch + 1}:')
         model.train(True)
         avg_loss = train_one_epoch_forward(training_loader=training_loader, model=model, loss_fn=loss_fn,
-                                           optimizer=optimizer)
+                                           optimizer=optimizer, device=device)
         scheduler.step()
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Epoch: {epoch + 1}  Learning Rate: {scheduler.get_last_lr()}')
 
@@ -188,9 +182,10 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     return model, x_axis_loss, x_axis_vloss, loss_record, vloss_record
 
 
-def train_one_epoch_backward(training_loader, optimizer, backward_model, forward_model, loss_fn):
+def train_one_epoch_backward(training_loader, optimizer, backward_model, forward_model, loss_fn, device=torch.device('cuda')):
     """
 
+    :param device:
     :param training_loader:
     :param optimizer:
     :param backward_model:
@@ -235,9 +230,11 @@ def train_one_epoch_backward(training_loader, optimizer, backward_model, forward
 
 
 def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn, optimizer, scheduler, attention,
-                          timestamp, epochs=EPOCHS):
+                          timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=torch.device('cuda')):
     """
     Train backward model for epochs
+    :param device:
+    :param results_path:
     :param timestamp: str
     :param backward_model: torch.nn.Module
     :param attention: double
@@ -257,7 +254,7 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
     x_axis_vloss = []
 
     # Save model path
-    model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
+    model_save_path = os.path.join(results_path, timestamp, MODEL_PATH)
 
     # Load forward model
     forward_model_name = 'Forward_mse_vloss_best_attn_{}.pth'.format(attention)

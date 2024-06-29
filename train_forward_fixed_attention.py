@@ -33,7 +33,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda')
+        device = torch.device('cuda:0')
         # device = "cuda" if torch.cuda.is_available() else "cpu"
         # device = "cpu"
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
@@ -41,7 +41,8 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240628'
+    # timestamp = '20240628'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -65,7 +66,7 @@ if __name__ == '__main__':
                                   num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
     test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False,
                                  num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
-
+    '''
     print('{}: Using dataset:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
     print('Train:')
@@ -75,6 +76,8 @@ if __name__ == '__main__':
     print('Test:')
     test_dataset.print()
     test_dataset.print_item(0)
+    '''
+
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
@@ -88,8 +91,8 @@ if __name__ == '__main__':
         # Forward
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward')
         forward_model = ForwardFixAttentionLSTM(attention=ATTENTION, input_len=input_len,
-                                              hidden_units=HIDDEN_UNITS, out_len=out_len,
-                                              num_layers=NUM_LAYERS).to(device)
+                                                hidden_units=HIDDEN_UNITS, out_len=out_len,
+                                                num_layers=NUM_LAYERS).to(device)
 
         for p in forward_model.parameters():
             if p.dim() > 1:
@@ -110,7 +113,7 @@ if __name__ == '__main__':
         forward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
             training_loader=train_dataloader, test_loader=test_dataloader, model=forward_model,
             loss_fn=forward_loss_fn_MSE, optimizer=forward_optimizer_Adam, scheduler=forward_step_lr,
-            attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS)
+            attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=device)
 
         # Save model
         model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}_attn_{ATTENTION}.pth'

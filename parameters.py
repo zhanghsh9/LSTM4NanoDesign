@@ -10,7 +10,7 @@ MODEL_PATH = 'models'
 RODS = 2
 BATCH_SIZE = 32
 # See https://discuss.pytorch.org/t/w-cudaipctypes-cpp-22-producer-process-has-been-terminated-before-all-shared-cuda-tensors-released-see-note-sharing-cuda-tensors/124445/11
-NUM_WORKERS = 8
+NUM_WORKERS = 16
 SAMPLE_RATE = 1
 
 # Model

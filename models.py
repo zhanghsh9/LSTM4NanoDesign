@@ -100,8 +100,8 @@ class ForwardSelfAttentionLSTM(nn.Module):
 
         # Layers
         self.self_attention = SelfAttention(input_len=self.input_len, out_len=self.input_len)
-        self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units[0], num_layers=num_layers[0],
-                               batch_first=True)
+        self.encoder = nn.LSTM(input_size=self.input_len, hidden_size=hidden_units[0],
+                               num_layers=num_layers[0], batch_first=True)
         self.lstms = nn.ModuleList()
         for i in range(1, len(hidden_units)):
             self.lstms.append(
