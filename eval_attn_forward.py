@@ -51,7 +51,7 @@ if __name__ == '__main__':
     '''
 
     # attn_list = [i / 2. for i in range(12)]
-    attn_list = np.arange(0.5, 7.5, 0.5).tolist()
+    attn_list = np.arange(0.5, 12.5, 0.5).tolist()
     forward_model = []
     forward_loss_fn = MSELoss()
     forward_mse_loss_sum = [0 for _ in range(len(attn_list))]
@@ -64,34 +64,48 @@ if __name__ == '__main__':
     for ii in range(len(attn_list)):
         # Forward model
         model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}_attn_{attn_list[ii]}.pth'
-        forward_model.append(torch.load(os.path.join(model_save_path, model_name)))
-        forward_model[ii].to(device)
-        forward_model[ii].eval()
+        forward_model = torch.load(os.path.join(model_save_path, model_name))
+        forward_model.to(device)
+        forward_model.eval()
 
-    with torch.no_grad():
-        for i, data in enumerate(test_dataloader):
-            vinputs, vlabels = data
-            vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
-
-            # Forward
-            for j in range(len(vlabels)):
-                plt1, = plt.plot(lamda, vlabels[j, 0:301].cpu(), label='Real')
-                for ii in range(len(attn_list)):
-                    voutput, _ = forward_model[ii](vinputs)
-                    plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
-                    mse_loss = forward_loss_fn(vlabels, voutput).item()
-                    forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] + mse_loss
-
+        with torch.no_grad():
+            for i, data in enumerate(test_dataloader):
+                vinputs, vlabels = data
+                vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
+                voutput, _ = forward_model(vinputs)
+                mse_loss = forward_loss_fn(vlabels, voutput).item()
+                forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] + mse_loss
+                '''
+                Forward, TL
+                plt.figure()
+                plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
+                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TL')
                 plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, 'forward_{}.png'.format(i))):
-                    os.remove(os.path.join(figs_save_path, 'forward_{}.png'.format(i)))
-                plt.savefig(os.path.join(figs_save_path, 'forward_{}.png'.format(i)))
+                if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png')):
+                    os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
+                plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
                 plt.show()
+                plt.close()
 
+                # Forward, TR
+                plt.figure()
+                plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
+                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                plt.legend()
+                plt.xlabel('lambda(nm)')
+                plt.ylabel('TL')
+                plt.title('Forward')
+
+                if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png')):
+                    os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
+                plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
+                plt.show()
+                plt.close()
+                '''
     for ii in range(len(attn_list)):
         forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] / (i + 1)
         print(f'Attention = {attn_list[ii]}, forward MSE = {forward_mse_loss_sum[ii]}')
@@ -109,4 +123,3 @@ if __name__ == '__main__':
     loss_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum,
                  'backward_mse_loss_sum': backward_mse_loss_sum}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_to_attn.mat'), mdict=loss_save)
-

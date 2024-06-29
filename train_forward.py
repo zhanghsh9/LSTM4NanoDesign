@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    # timestamp = '20230426'
+    timestamp = '20240628'
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
-    for ATTENTION in np.arange(0.5, 7.5, 0.5).tolist():
+    for ATTENTION in np.arange(12.5, 20.5, 0.5).tolist():
 
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: ATTENTION = {ATTENTION}')
 

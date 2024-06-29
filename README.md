@@ -4,23 +4,23 @@ This is the git repo of Surface plasmon light field control based on machine lea
 
 ## Environment
 ```text
-python = 3.11
-CUDA = 12.1
+python = 3.12.4
+CUDA = 11.8
 pytorch = 2.3.1
 scipy = 1.14.0
 numpy = 2.0.0
 matplotlib = 3.8.4
 ```
-Running on NVIDIA RTX 4070 Ti Super
+Running on 4 NVIDIA RTX 2080 Ti
 
 ## How to run
-Train-Test split:
+### Train-Test split:
 
 Use MATLAB to run split_train_test_all.m
 
 Please notice that there are 86 step-datas in rods=2, which will not be included in the test dataset.
 
-Data:
+### Data:
 ```text
 data/
     comb_2_****_test.mat
@@ -31,12 +31,13 @@ data/
     comb_8_****_train.mat
 ```
 
-Train:
+### Train:
+#### Forward network: 
 ```commandline
-python main.py
+python train_forward.py
 ```
 
-Evaluation:
+### Evaluation:
 ```commandline
 python eval.py
 ```
