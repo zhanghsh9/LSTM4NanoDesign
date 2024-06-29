@@ -23,8 +23,8 @@ NUM_LAYERS = [1]*len(HIDDEN_UNITS)
 
 # Train
 LEARNING_RATE = 1e-3
-EPOCHS = 50
+EPOCHS = 200
 VALID_FREQ = int(EPOCHS / 8) if EPOCHS < 200 else int(EPOCHS / 16) if EPOCHS < 500 else int(EPOCHS / 32)
 # Learning rate drop rate
-STEP_SIZE = 10
+STEP_SIZE = 50
 GAMMA = 0.75
