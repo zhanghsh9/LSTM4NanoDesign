@@ -61,7 +61,7 @@ class ForwardFixAttentionLSTM(nn.Module):
     def forward(self, x):
         attentioned_x = self.fixed_attention(x)
         modified_x = F.relu(self.encoder(attentioned_x)[0])
-        for i in range(len(self.hidden_size)):
+        for i in range(len(self.hidden_size)-1):
             modified_x = F.relu(self.lstms[i](modified_x)[0])
 
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
@@ -116,7 +116,7 @@ class ForwardSelfAttentionLSTM(nn.Module):
     def forward(self, x):
         attentioned_x = self.self_attention(x)
         modified_x = F.relu(self.encoder(attentioned_x)[0])
-        for i in range(len(self.hidden_size)):
+        for i in range(len(self.hidden_size)-1):
             modified_x = F.relu(self.lstms[i](modified_x)[0])
 
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
@@ -164,7 +164,7 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
 
     def forward(self, x):
         modified_x = F.relu(self.encoder(x)[0])
-        for i in range(len(self.hidden_size)):
+        for i in range(len(self.hidden_size)-1):
             modified_x = F.relu(self.lstms[i](modified_x)[0])
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         attentioned_x, _ = self.multihead_attention(modified_x, modified_x, modified_x)
