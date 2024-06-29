@@ -78,7 +78,7 @@ if __name__ == '__main__':
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
-    for ATTENTION in np.arange(12.5, 20.5, 0.5).tolist():
+    for ATTENTION in np.arange(0.5, 20.5, 1).tolist():
 
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: ATTENTION = {ATTENTION}')
 
