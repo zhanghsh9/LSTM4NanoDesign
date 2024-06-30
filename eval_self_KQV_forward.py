@@ -20,7 +20,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:1')
+        device = torch.device('cuda:2')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     # dir
     timestamp = '20240629'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention_KQV')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
@@ -110,13 +110,8 @@ if __name__ == '__main__':
         os.remove(os.path.join(figs_save_path, 'MSE_Attn.png'))
     plt.savefig(os.path.join(figs_save_path, 'MSE_Attn.png'))
     plt.show()
-    
+
     loss_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_to_attn.mat'), mdict=loss_save)
     '''
 
-    print(forward_model.self_attention.attention.weight)
-    attn_matrix = forward_model.self_attention.attention.weight.to('cpu')
-    attn_save = {'attn_matrix': attn_matrix.tolist()}
-    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'attn.mat'), mdict=attn_save)
-    

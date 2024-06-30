@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    # timestamp = '20240628'
+    timestamp = '20240630'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):

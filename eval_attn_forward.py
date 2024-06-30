@@ -52,7 +52,7 @@ if __name__ == '__main__':
     '''
 
     # attn_list = [i / 2. for i in range(12)]
-    attn_list = np.arange(0.5, 12.5, 0.5).tolist()
+    attn_list = np.arange(0.5, 20.5, 1).tolist()
     forward_model = []
     forward_loss_fn = MSELoss()
     forward_mse_loss_sum = [0] * len(attn_list)
@@ -73,37 +73,38 @@ if __name__ == '__main__':
                 voutput, _ = forward_model(vinputs)
                 mse_loss = forward_loss_fn(vlabels, voutput).item()
                 forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] + mse_loss
-                '''
-                Forward, TL
-                plt.figure()
-                plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
-                plt.legend()
-                plt.xlabel('lambda(nm)')
-                plt.ylabel('TL')
-                plt.title('Forward')
+                if i in [0, 1, 2, 3]:
+                    # Forward, TL
+                    plt.figure()
+                    plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
+                    plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt.legend()
+                    plt.xlabel('lambda(nm)')
+                    plt.ylabel('TL')
+                    plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png')):
-                    os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
-                plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
-                plt.show()
-                plt.close()
+                    if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png')):
+                        os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
+                    plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
+                    plt.show()
+                    plt.close()
 
-                # Forward, TR
-                plt.figure()
-                plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Attn_{}'.format(attn_list[ii]))
-                plt.legend()
-                plt.xlabel('lambda(nm)')
-                plt.ylabel('TR')
-                plt.title('Forward')
+                    # Forward, TR
+                    plt.figure()
+                    plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
+                    plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt.legend()
+                    plt.xlabel('lambda(nm)')
+                    plt.ylabel('TR')
+                    plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png')):
-                    os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
-                plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
-                plt.show()
-                plt.close()
-                '''
+                    if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png')):
+                        os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
+                    plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
+                    plt.show()
+                    plt.close()
+
+
     for ii in range(len(attn_list)):
         forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] / (i + 1)
         print(f'Attention = {attn_list[ii]}, forward MSE = {forward_mse_loss_sum[ii]}')

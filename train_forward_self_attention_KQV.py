@@ -21,6 +21,10 @@ from train import train_epochs_forward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA
 
+EPOCHS=1250
+STEP_SIZE=400
+
+
 if __name__ == '__main__':
     start_time = time.time()
     # Loss record
@@ -41,7 +45,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    # timestamp = '20240628'
+    timestamp = '20240630'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention_KQV')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):

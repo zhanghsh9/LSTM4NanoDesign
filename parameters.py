@@ -16,15 +16,15 @@ SAMPLE_RATE = 1
 # Model
 # See https://datascience.stackexchange.com/questions/93768/dimensions-of-transformer-dmodel-and-depth
 ATTENTION = 3
-HIDDEN_UNITS = [1024, 1024, 1024]
+HIDDEN_UNITS = [1024, 1024, 1024, 1024]
 # DROPOUT = 0.1
 NUM_LAYERS = [1]*len(HIDDEN_UNITS)
 # NUM_LSTMS = 3
 
 # Train
 LEARNING_RATE = 1e-3
-EPOCHS = 200
+EPOCHS = 800
 VALID_FREQ = int(EPOCHS / 8) if EPOCHS < 200 else int(EPOCHS / 16) if EPOCHS < 500 else int(EPOCHS / 32)
 # Learning rate drop rate
-STEP_SIZE = 50
+STEP_SIZE = 250
 GAMMA = 0.75
