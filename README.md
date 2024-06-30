@@ -34,18 +34,12 @@ data/
 ### Train:
 #### Forward network: 
 ```commandline
-python train_forward.py
+python train_forward*.py
 ```
 
 ### Evaluation:
 ```commandline
-python eval.py
-```
-
-or
-
-```commandline
-python eval_attn.py
+python eval*.py
 ```
 
 Trained model, 150 epochs:
