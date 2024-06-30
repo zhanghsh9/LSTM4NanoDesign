@@ -20,9 +20,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:0')
-        # device = "cuda" if torch.cuda.is_available() else "cpu"
-        # device = "cpu"
+        device = torch.device('cuda:1')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -34,7 +32,7 @@ if __name__ == '__main__':
 
     # dir
     timestamp = '20240629'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
@@ -51,63 +49,58 @@ if __name__ == '__main__':
                                                                                         NUM_LAYERS)
     '''
 
-    # attn_list = [i / 2. for i in range(12)]
-    attn_list = np.arange(0.5, 12.5, 0.5).tolist()
     forward_model = []
     forward_loss_fn = MSELoss()
-    forward_mse_loss_sum = [0] * len(attn_list)
     lamda = range(900, 1801, 3 * SAMPLE_RATE)
 
     # Load models
-    for ii in range(len(attn_list)):
-        # Forward model
-        model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}_attn_{attn_list[ii]}.pth'
-        forward_model = torch.load(os.path.join(model_save_path, model_name))
-        forward_model.to(device)
-        forward_model.eval()
+    model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
+    forward_model = torch.load(os.path.join(model_save_path, model_name))
+    forward_model.to(device)
+    forward_model.eval()
+    forward_mse_loss_sum = 0
 
-        with torch.no_grad():
-            for i, data in enumerate(test_dataloader):
-                vinputs, vlabels = data
-                vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
-                voutput, _ = forward_model(vinputs)
-                mse_loss = forward_loss_fn(vlabels, voutput).item()
-                forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] + mse_loss
-                '''
-                Forward, TL
+    with torch.no_grad():
+        for i, data in enumerate(test_dataloader):
+            vinputs, vlabels = data
+            vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
+            voutput, _ = forward_model(vinputs)
+            mse_loss = forward_loss_fn(vlabels, voutput).item()
+            forward_mse_loss_sum = forward_mse_loss_sum + mse_loss
+            if i in [0, 1, 2, 3, 4]:
+                # Forward, TL
                 plt.figure()
                 plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Predict')
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TL')
                 plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png')):
-                    os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
-                plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
+                if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_TL.png')):
+                    os.remove(os.path.join(figs_save_path, f'forward_{i}_TL.png'))
+                plt.savefig(os.path.join(figs_save_path, f'forward_{i}_TL.png'))
                 plt.show()
                 plt.close()
 
                 # Forward, TR
                 plt.figure()
                 plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Predict')
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TR')
                 plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png')):
-                    os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
-                plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
+                if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_TR.png')):
+                    os.remove(os.path.join(figs_save_path, f'forward_{i}_TR.png'))
+                plt.savefig(os.path.join(figs_save_path, f'forward_{i}_TR.png'))
                 plt.show()
                 plt.close()
-                '''
-    for ii in range(len(attn_list)):
-        forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] / (i + 1)
-        print(f'Attention = {attn_list[ii]}, forward MSE = {forward_mse_loss_sum[ii]}')
 
+        forward_mse_loss_sum = forward_mse_loss_sum / (i + 1)
+        print(f'Forward MSE = {forward_mse_loss_sum}')
+    '''
     plt1, = plt.plot(attn_list, forward_mse_loss_sum, label='forward')
     plt.legend()
     plt.xlabel('Attention')
@@ -117,6 +110,7 @@ if __name__ == '__main__':
         os.remove(os.path.join(figs_save_path, 'MSE_Attn.png'))
     plt.savefig(os.path.join(figs_save_path, 'MSE_Attn.png'))
     plt.show()
-
+    
     loss_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_to_attn.mat'), mdict=loss_save)
+    '''
