@@ -19,7 +19,7 @@ from data import create_dataset
 from models import ForwardSelfAttentionLSTM
 from train import train_epochs_forward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
-    LEARNING_RATE, EPOCHS, NUM_LAYERS, ATTENTION, HIDDEN_UNITS, STEP_SIZE, GAMMA
+    LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA
 
 if __name__ == '__main__':
     start_time = time.time()
@@ -80,7 +80,6 @@ if __name__ == '__main__':
 
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
-    print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: ATTENTION = {ATTENTION}')
 
     # Create model
     input_len = train_dataset.max_src_seq_len
@@ -109,7 +108,7 @@ if __name__ == '__main__':
     forward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
         training_loader=train_dataloader, test_loader=test_dataloader, model=forward_model,
         loss_fn=forward_loss_fn_MSE, optimizer=forward_optimizer_Adam, scheduler=forward_step_lr,
-        attention=ATTENTION, timestamp=timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=device)
+        attention=0, timestamp=timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=device)
 
     # Save model
     model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
@@ -134,7 +133,7 @@ if __name__ == '__main__':
     loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
                  'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS,
                  'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA}
-    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_attn{}.mat'.format(ATTENTION)), mdict=loss_save)
+    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss.mat'), mdict=loss_save)
 
     end_time = time.time()
     print()

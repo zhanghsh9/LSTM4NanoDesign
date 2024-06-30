@@ -142,11 +142,12 @@ class SelfAttentionKQV(nn.Module):
         V = self.v_linear(x)
 
         # Compute attention scores
-        attn_scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.feature_dim ** 0.5)
+        attn_scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.input_len ** 0.5)
         attn_weights = self.softmax(attn_scores)
 
         # Compute weighted sum
-        output = torch.matmul(attn_weights, V)
+        # output = torch.matmul(attn_weights, V)
+        output = torch.matmul(attn_weights, x)
         return output, attn_weights
 
 
