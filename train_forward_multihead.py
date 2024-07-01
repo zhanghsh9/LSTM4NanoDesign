@@ -16,14 +16,13 @@ import time
 import shutil
 
 from data import create_dataset
-from models import ForwardSelfAttentionKQVLSTM
+from models import ForwardMultiheadAttentionLSTM
 from train import train_epochs_forward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
-    LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA
+    LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA, NUM_HEADS
 
-EPOCHS=1250
-STEP_SIZE=400
-
+EPOCHS = 1250
+STEP_SIZE = 400
 
 if __name__ == '__main__':
     start_time = time.time()
@@ -37,14 +36,14 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:2')
+        device = torch.device('cuda:3')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240630'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention_KQV')
+    # timestamp = '20240630'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'multihead')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -88,8 +87,9 @@ if __name__ == '__main__':
     out_len = train_dataset.max_tgt_seq_len
     # Forward
     print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward')
-    forward_model = ForwardSelfAttentionKQVLSTM(input_len=input_len, hidden_units=HIDDEN_UNITS,
-                                                out_len=out_len, num_layers=NUM_LAYERS).to(device)
+    forward_model = ForwardMultiheadAttentionLSTM(input_len=input_len, hidden_units=HIDDEN_UNITS,
+                                                  out_len=out_len, num_layers=NUM_LAYERS,
+                                                  num_heads=NUM_HEADS).to(device)
 
     for p in forward_model.parameters():
         if p.dim() > 1:

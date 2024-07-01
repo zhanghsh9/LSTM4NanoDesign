@@ -24,6 +24,7 @@ if __name__ == '__main__':
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
+    EPOCHS=1250
     time_now = int(time.strftime("%Y%m%d%H%M%S", time.localtime()))
     torch.manual_seed(time_now)
 

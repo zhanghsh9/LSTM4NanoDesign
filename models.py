@@ -196,7 +196,7 @@ class ForwardSelfAttentionKQVLSTM(nn.Module):
 
 
 class ForwardMultiheadAttentionLSTM(nn.Module):
-    def __init__(self, input_len, hidden_units, out_len, num_layers, num_heads):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, num_heads=1):
         super(ForwardMultiheadAttentionLSTM, self).__init__()
 
         # Ensure hidden_units and num_layers are lists
@@ -227,7 +227,7 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
         # self.lstms = get_clones(
         #    nn.LSTM(input_size=hidden_units, hidden_size=hidden_units, num_layers=num_layers, batch_first=True),
         #    num_lstms)
-        self.multihead_attention = nn.MultiheadAttention(embed_dim=self.hidden_size,
+        self.multihead_attention = nn.MultiheadAttention(embed_dim=self.hidden_size[-1],
                                                          num_heads=self.num_heads, batch_first=True)
         self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
@@ -240,7 +240,7 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
         attentioned_x, _ = self.multihead_attention(modified_x, modified_x, modified_x)
         # attentioned_x shape: (batch_size, seq_length, hidden_dim)
         # Selecting the output corresponding to the last sequence element
-        out = self.fc1(attentioned_x[:, -1, :])
+        out = self.fc1(attentioned_x)
         # out = self.fc1(modified_x)
         out = torch.sigmoid(out)
         return out, self.hidden
