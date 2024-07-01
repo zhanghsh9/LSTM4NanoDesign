@@ -217,6 +217,8 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
         self.value = None
 
         # Layers
+        self.multihead_attention = nn.MultiheadAttention(embed_dim=self.input_len,
+                                                         num_heads=self.num_heads, batch_first=True)
         self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units[0], num_layers=num_layers[0],
                                batch_first=True)
         self.lstms = nn.ModuleList()
@@ -227,8 +229,8 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
         # self.lstms = get_clones(
         #    nn.LSTM(input_size=hidden_units, hidden_size=hidden_units, num_layers=num_layers, batch_first=True),
         #    num_lstms)
-        self.multihead_attention = nn.MultiheadAttention(embed_dim=self.hidden_size[-1],
-                                                         num_heads=self.num_heads, batch_first=True)
+        # self.multihead_attention = nn.MultiheadAttention(embed_dim=self.hidden_size[-1],
+        #                                                  num_heads=self.num_heads, batch_first=True)
         self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
 
