@@ -31,7 +31,7 @@ if __name__ == '__main__':
     print()
 
     # dir
-    timestamp = '20240629'
+    timestamp = '20240630'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)

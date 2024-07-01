@@ -33,7 +33,7 @@ if __name__ == '__main__':
     print()
 
     # dir
-    timestamp = '20240629'
+    timestamp = '20240630'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -73,7 +73,7 @@ if __name__ == '__main__':
                 voutput, _ = forward_model(vinputs)
                 mse_loss = forward_loss_fn(vlabels, voutput).item()
                 forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] + mse_loss
-                if i in [0, 1, 2, 3]:
+                if i in [0, 1, 2, 3, 4]:
                     # Forward, TL
                     plt.figure()
                     plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
