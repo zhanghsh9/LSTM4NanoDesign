@@ -83,9 +83,9 @@ if __name__ == '__main__':
                     plt.ylabel('TL')
                     plt.title('Forward')
 
-                    if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png')):
-                        os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
-                    plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TL.png'))
+                    if os.path.exists(os.path.join(figs_save_path, f'TL_forward_{i}_attn_{attn_list[ii]}.png')):
+                        os.remove(os.path.join(figs_save_path, f'TL_forward_{i}_attn_{attn_list[ii]}.png'))
+                    plt.savefig(os.path.join(figs_save_path, f'TL_forward_{i}_attn_{attn_list[ii]}.png'))
                     plt.show()
                     plt.close()
 
@@ -98,9 +98,9 @@ if __name__ == '__main__':
                     plt.ylabel('TR')
                     plt.title('Forward')
 
-                    if os.path.exists(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png')):
-                        os.remove(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
-                    plt.savefig(os.path.join(figs_save_path, f'forward_{i}_attn_{attn_list[ii]}_TR.png'))
+                    if os.path.exists(os.path.join(figs_save_path, f'TR_forward_{i}_attn_{attn_list[ii]}.png')):
+                        os.remove(os.path.join(figs_save_path, f'TR_forward_{i}_attn_{attn_list[ii]}.png'))
+                    plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}_attn_{attn_list[ii]}.png'))
                     plt.show()
                     plt.close()
 

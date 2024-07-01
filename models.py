@@ -233,14 +233,15 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
 
     def forward(self, x):
-        modified_x = F.relu(self.encoder(x)[0])
+        attentioned_x, _ = self.multihead_attention(x, x, x)
+        modified_x = F.relu(self.encoder(attentioned_x)[0])
         for i in range(len(self.hidden_size) - 1):
             modified_x = F.relu(self.lstms[i](modified_x)[0])
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
-        attentioned_x, _ = self.multihead_attention(modified_x, modified_x, modified_x)
+        # attentioned_x, _ = self.multihead_attention(modified_x, modified_x, modified_x)
         # attentioned_x shape: (batch_size, seq_length, hidden_dim)
         # Selecting the output corresponding to the last sequence element
-        out = self.fc1(attentioned_x)
+        out = self.fc1(modified_x)
         # out = self.fc1(modified_x)
         out = torch.sigmoid(out)
         return out, self.hidden

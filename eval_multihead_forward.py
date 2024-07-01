@@ -20,7 +20,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:2')
+        device = torch.device('cuda:3')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -32,8 +32,8 @@ if __name__ == '__main__':
     print()
 
     # dir
-    timestamp = '20240630'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention_KQV')
+    timestamp = '20240701'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'multihead')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
