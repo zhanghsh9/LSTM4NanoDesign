@@ -43,12 +43,6 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, drop_last=True,
                                  pin_memory=True)
     # Forward prediction
-    '''
-    model_name = 'Transformer_epochs_{}_dmodel_{}_dff_{}_heads_{}_layers_{}.pth'.format(EPOCHS, DIM_MODEL,
-                                                                                        DIM_FEEDFORWARD, HEADS,
-                                                                                        NUM_LAYERS)
-    '''
-
     forward_model = []
     forward_loss_fn = MSELoss()
     lamda = range(900, 1801, 3 * SAMPLE_RATE)
@@ -67,7 +61,7 @@ if __name__ == '__main__':
             voutput, _ = forward_model(vinputs)
             mse_loss = forward_loss_fn(vlabels, voutput).item()
             forward_mse_loss_sum = forward_mse_loss_sum + mse_loss
-            if i in [0, 1, 2, 3, 4]:
+            if i in range(20):
                 # Forward, TL
                 plt.figure()
                 plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
@@ -100,20 +94,6 @@ if __name__ == '__main__':
 
         forward_mse_loss_sum = forward_mse_loss_sum / (i + 1)
         print(f'Forward MSE = {forward_mse_loss_sum}')
-    '''
-    plt1, = plt.plot(attn_list, forward_mse_loss_sum, label='forward')
-    plt.legend()
-    plt.xlabel('Attention')
-    plt.ylabel('MSE')
-    plt.title('MSE to attention')
-    if os.path.exists(os.path.join(figs_save_path, 'MSE_Attn.png')):
-        os.remove(os.path.join(figs_save_path, 'MSE_Attn.png'))
-    plt.savefig(os.path.join(figs_save_path, 'MSE_Attn.png'))
-    plt.show()
-    
-    loss_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum}
-    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_to_attn.mat'), mdict=loss_save)
-    '''
 
     print(forward_model.self_attention.attention.weight)
     attn_matrix = forward_model.self_attention.attention.weight.to('cpu')

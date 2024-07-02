@@ -1,3 +1,5 @@
+from torch import nn
+
 # Parameters
 
 # PATH
@@ -21,6 +23,7 @@ HIDDEN_UNITS = [1024, 1024, 1024, 1024]
 NUM_LAYERS = [1] * len(HIDDEN_UNITS)
 # NUM_LSTMS = 3
 NUM_HEADS = 1
+ACTIVATE_FUNC = nn.Sigmoid()
 
 # Train
 LEARNING_RATE = 1e-3

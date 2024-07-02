@@ -178,7 +178,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
         ax.autoscale_view()
         fig.canvas.draw()
         fig.canvas.flush_events()
-
+    plt.close()
     return model, x_axis_loss, x_axis_vloss, loss_record, vloss_record
 
 
