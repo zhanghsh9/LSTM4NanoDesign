@@ -21,8 +21,6 @@ if __name__ == '__main__':
         raise RuntimeError('CUDA is not available')
     else:
         device = torch.device('cuda:0')
-        # device = "cuda" if torch.cuda.is_available() else "cpu"
-        # device = "cpu"
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -33,7 +31,7 @@ if __name__ == '__main__':
     print()
 
     # dir
-    timestamp = '20240630'
+    timestamp = '20240701'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -57,6 +55,8 @@ if __name__ == '__main__':
     forward_loss_fn = MSELoss()
     forward_mse_loss_sum = [0] * len(attn_list)
     lamda = range(900, 1801, 3 * SAMPLE_RATE)
+    prediction = []
+    real = []
 
     # Load models
     for ii in range(len(attn_list)):
@@ -65,7 +65,8 @@ if __name__ == '__main__':
         forward_model = torch.load(os.path.join(model_save_path, model_name))
         forward_model.to(device)
         forward_model.eval()
-
+        prediction.append([])
+        real.append([])
         with torch.no_grad():
             for i, data in enumerate(test_dataloader):
                 vinputs, vlabels = data
@@ -73,6 +74,8 @@ if __name__ == '__main__':
                 voutput, _ = forward_model(vinputs)
                 mse_loss = forward_loss_fn(vlabels, voutput).item()
                 forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] + mse_loss
+                prediction[ii].append(voutput.to('cpu').tolist())
+                real[ii].append(vlabels.to('cpu').tolist())
                 if i in [0, 1, 2, 3, 4]:
                     # Forward, TL
                     plt.figure()
@@ -104,7 +107,6 @@ if __name__ == '__main__':
                     plt.show()
                     plt.close()
 
-
     for ii in range(len(attn_list)):
         forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] / (i + 1)
         print(f'Attention = {attn_list[ii]}, forward MSE = {forward_mse_loss_sum[ii]}')
@@ -119,5 +121,5 @@ if __name__ == '__main__':
     plt.savefig(os.path.join(figs_save_path, 'MSE_Attn.png'))
     plt.show()
 
-    loss_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum}
-    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss_to_attn.mat'), mdict=loss_save)
+    results_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum, 'real': real, 'prediction': prediction}
+    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)

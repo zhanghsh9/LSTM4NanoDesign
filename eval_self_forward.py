@@ -31,7 +31,7 @@ if __name__ == '__main__':
     print()
 
     # dir
-    timestamp = '20240630'
+    timestamp = '20240701'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -53,6 +53,8 @@ if __name__ == '__main__':
     forward_model.to(device)
     forward_model.eval()
     forward_mse_loss_sum = 0
+    prediction = []
+    real = []
 
     with torch.no_grad():
         for i, data in enumerate(test_dataloader):
@@ -61,6 +63,8 @@ if __name__ == '__main__':
             voutput, _ = forward_model(vinputs)
             mse_loss = forward_loss_fn(vlabels, voutput).item()
             forward_mse_loss_sum = forward_mse_loss_sum + mse_loss
+            prediction.append(voutput.to('cpu').tolist())
+            real.append(vlabels.to('cpu').tolist())
             if i in range(20):
                 # Forward, TL
                 plt.figure()
@@ -73,7 +77,7 @@ if __name__ == '__main__':
 
                 if os.path.exists(os.path.join(figs_save_path, f'TL_forward_{i}.png')):
                     os.remove(os.path.join(figs_save_path, f'TL_forward_{i}.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TL_forward_{i}.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TL_forward_{i}.png'), dpi=900)
                 plt.show()
                 plt.close()
 
@@ -88,15 +92,15 @@ if __name__ == '__main__':
 
                 if os.path.exists(os.path.join(figs_save_path, f'TR_forward_{i}.png')):
                     os.remove(os.path.join(figs_save_path, f'TR_forward_{i}.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'), dpi=900)
                 plt.show()
                 plt.close()
 
         forward_mse_loss_sum = forward_mse_loss_sum / (i + 1)
         print(f'Forward MSE = {forward_mse_loss_sum}')
 
-    print(forward_model.self_attention.attention.weight)
-    attn_matrix = forward_model.self_attention.attention.weight.to('cpu')
-    attn_save = {'attn_matrix': attn_matrix.tolist()}
-    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'attn.mat'), mdict=attn_save)
+    print(forward_model.self_attention.weight)
+    attn_matrix = forward_model.self_attention.weight.to('cpu')
+    results_save = {'attn_matrix': attn_matrix.tolist(), 'real': real, 'prediction': prediction, 'mse': forward_mse_loss_sum}
+    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
     
