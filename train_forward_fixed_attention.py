@@ -34,14 +34,12 @@ if __name__ == '__main__':
         raise RuntimeError('CUDA is not available')
     else:
         device = torch.device('cuda:0')
-        # device = "cuda" if torch.cuda.is_available() else "cpu"
-        # device = "cpu"
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    # timestamp = '20240630'
+    timestamp = '20240703_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
@@ -89,7 +87,7 @@ if __name__ == '__main__':
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
 
-    for ATTENTION in np.arange(0.5, 20.5, 1).tolist():
+    for ATTENTION in [1]: # np.arange(0.5, 20.5, 1).tolist():
 
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: ATTENTION = {ATTENTION}')
 
@@ -130,6 +128,7 @@ if __name__ == '__main__':
         torch.save(forward_model, os.path.join(model_save_path, model_name))
 
         # Draw loss figure
+        plt.figure()
         figs_name = 'loss_forward_attn_{}.png'.format(ATTENTION)
         # plt.axes(yscale="log")
         plt1, = plt.plot(x_axis_loss, loss_record, label='loss')
@@ -142,6 +141,7 @@ if __name__ == '__main__':
             os.remove(os.path.join(figs_save_path, figs_name))
         plt.savefig(os.path.join(figs_save_path, figs_name))
         plt.show()
+        plt.close()
 
         loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
                      'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS,
