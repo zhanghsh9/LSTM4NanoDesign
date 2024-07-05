@@ -33,13 +33,13 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:0')
+        device = torch.device('cuda:2')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240703_tanh'
+    timestamp = '20240704_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
@@ -86,8 +86,10 @@ if __name__ == '__main__':
 
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
-
-    for ATTENTION in [1]: # np.arange(0.5, 20.5, 1).tolist():
+    attn_list = np.arange(0.5, 20.5, 1).tolist()
+    attn_list.append(1)
+    attn_list.sort()
+    for ATTENTION in attn_list:
 
         print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: ATTENTION = {ATTENTION}')
 

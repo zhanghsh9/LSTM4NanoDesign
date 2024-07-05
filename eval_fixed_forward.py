@@ -31,7 +31,7 @@ if __name__ == '__main__':
     print()
 
     # dir
-    timestamp = '20240701'
+    timestamp = '20240703_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -51,6 +51,8 @@ if __name__ == '__main__':
 
     # attn_list = [i / 2. for i in range(12)]
     attn_list = np.arange(0.5, 20.5, 1).tolist()
+    attn_list.append(1)
+    attn_list.sort()
     forward_model = []
     forward_loss_fn = MSELoss()
     forward_mse_loss_sum = [0] * len(attn_list)
@@ -61,12 +63,14 @@ if __name__ == '__main__':
     # Load models
     for ii in range(len(attn_list)):
         # Forward model
-        model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}_attn_{attn_list[ii]}.pth'
+        # model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}_attn_{attn_list[ii]}.pth'
+        model_name = f'Forward_mse_vloss_best_attn_{attn_list[ii]}.pth'
         forward_model = torch.load(os.path.join(model_save_path, model_name))
         forward_model.to(device)
         forward_model.eval()
         prediction.append([])
         real.append([])
+        vloss_best = 100
         with torch.no_grad():
             for i, data in enumerate(test_dataloader):
                 vinputs, vlabels = data
@@ -76,7 +80,40 @@ if __name__ == '__main__':
                 forward_mse_loss_sum[ii] = forward_mse_loss_sum[ii] + mse_loss
                 prediction[ii].append(voutput.to('cpu').tolist())
                 real[ii].append(vlabels.to('cpu').tolist())
-                if i in [0, 1, 2, 3, 4]:
+
+                if mse_loss < vloss_best:
+                    plt.figure()
+                    plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
+                    plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt.legend()
+                    plt.xlabel('lambda(nm)')
+                    plt.ylabel('TL')
+                    plt.title('Forward')
+
+                    if os.path.exists(os.path.join(figs_save_path, f'TL_forward_attn_{attn_list[ii]}_best.png')):
+                        os.remove(os.path.join(figs_save_path, f'TL_forward_attn_{attn_list[ii]}_best.png'))
+                    plt.savefig(os.path.join(figs_save_path, f'TL_forward_attn_{attn_list[ii]}_best.png'))
+                    plt.show()
+                    plt.close()
+
+                    # Forward, TR
+                    plt.figure()
+                    plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
+                    plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt.legend()
+                    plt.xlabel('lambda(nm)')
+                    plt.ylabel('TR')
+                    plt.title('Forward')
+
+                    if os.path.exists(os.path.join(figs_save_path, f'TR_forward_attn_{attn_list[ii]}_best.png')):
+                        os.remove(os.path.join(figs_save_path, f'TR_forward_attn_{attn_list[ii]}_best.png'))
+                    plt.savefig(os.path.join(figs_save_path, f'TR_forward_attn_{attn_list[ii]}_best.png'))
+                    plt.show()
+                    plt.close()
+                    vloss_best_index = i
+                    vloss_best = mse_loss
+
+                if i in range(20):
                     # Forward, TL
                     plt.figure()
                     plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
@@ -121,5 +158,8 @@ if __name__ == '__main__':
     plt.savefig(os.path.join(figs_save_path, 'MSE_Attn.png'))
     plt.show()
 
-    results_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum, 'real': real, 'prediction': prediction}
+    results_save = {'attn_list': attn_list, 'forward_mse_loss_sum': forward_mse_loss_sum, 'real': real,
+                    'prediction': prediction}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
+
+    print(f'Loss_min = {min(forward_mse_loss_sum)}, when attention = {attn_list[forward_mse_loss_sum.index(min(forward_mse_loss_sum))]}')

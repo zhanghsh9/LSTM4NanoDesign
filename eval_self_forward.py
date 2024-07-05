@@ -31,7 +31,7 @@ if __name__ == '__main__':
     print()
 
     # dir
-    timestamp = '20240701'
+    timestamp = '20240703_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -48,13 +48,15 @@ if __name__ == '__main__':
     lamda = range(900, 1801, 3 * SAMPLE_RATE)
 
     # Load models
-    model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
+    # model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
+    model_name = f'Forward_mse_vloss_best_attn_0.pth'
     forward_model = torch.load(os.path.join(model_save_path, model_name))
     forward_model.to(device)
     forward_model.eval()
     forward_mse_loss_sum = 0
     prediction = []
     real = []
+    vloss_best = 100
 
     with torch.no_grad():
         for i, data in enumerate(test_dataloader):
@@ -65,6 +67,37 @@ if __name__ == '__main__':
             forward_mse_loss_sum = forward_mse_loss_sum + mse_loss
             prediction.append(voutput.to('cpu').tolist())
             real.append(vlabels.to('cpu').tolist())
+            if mse_loss < vloss_best:
+                plt.figure()
+                plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
+                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Predicted')
+                plt.legend()
+                plt.xlabel('lambda(nm)')
+                plt.ylabel('TL')
+                plt.title('Forward')
+
+                if os.path.exists(os.path.join(figs_save_path, f'TL_forward_best.png')):
+                    os.remove(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
+                plt.show()
+                plt.close()
+
+                # Forward, TR
+                plt.figure()
+                plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
+                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Predicted')
+                plt.legend()
+                plt.xlabel('lambda(nm)')
+                plt.ylabel('TR')
+                plt.title('Forward')
+
+                if os.path.exists(os.path.join(figs_save_path, f'TR_forward_attn_best.png')):
+                    os.remove(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
+                plt.show()
+                plt.close()
+                vloss_best_index = i
+                vloss_best = mse_loss
             if i in range(20):
                 # Forward, TL
                 plt.figure()
