@@ -20,18 +20,15 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:1')
+        device = torch.device('cuda:3')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
     time_now = int(time.strftime("%Y%m%d%H%M%S", time.localtime()))
     torch.manual_seed(time_now)
 
-    print('Running on {}'.format(device))
-    print()
-
     # dir
-    timestamp = '20240703_tanh'
+    timestamp = '20240704_relu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -70,7 +67,7 @@ if __name__ == '__main__':
             if mse_loss < vloss_best:
                 plt.figure()
                 plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Predicted')
+                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label=f'Predict, MSE = {mse_loss*100:.2f}%')
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TL')
@@ -85,7 +82,7 @@ if __name__ == '__main__':
                 # Forward, TR
                 plt.figure()
                 plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Predicted')
+                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label=f'Predict, MSE = {mse_loss*100:.2f}%')
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TR')
@@ -102,7 +99,7 @@ if __name__ == '__main__':
                 # Forward, TL
                 plt.figure()
                 plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Predict')
+                plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label=f'Predict, MSE = {mse_loss*100:.2f}%')
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TL')
@@ -117,7 +114,7 @@ if __name__ == '__main__':
                 # Forward, TR
                 plt.figure()
                 plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
-                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Predict')
+                plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label=f'Predict, MSE = {mse_loss*100:.2f}%')
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TR')
@@ -132,7 +129,7 @@ if __name__ == '__main__':
         forward_mse_loss_sum = forward_mse_loss_sum / (i + 1)
         print(f'Forward MSE = {forward_mse_loss_sum}')
 
-    print(forward_model.self_attention.weight)
+    # print(forward_model.self_attention.weight)
     attn_matrix = forward_model.self_attention.weight.to('cpu')
     results_save = {'attn_matrix': attn_matrix.tolist(), 'real': real, 'prediction': prediction, 'mse': forward_mse_loss_sum}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)

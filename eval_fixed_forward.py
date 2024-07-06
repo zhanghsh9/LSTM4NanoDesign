@@ -27,11 +27,8 @@ if __name__ == '__main__':
     time_now = int(time.strftime("%Y%m%d%H%M%S", time.localtime()))
     torch.manual_seed(time_now)
 
-    print('Running on {}'.format(device))
-    print()
-
     # dir
-    timestamp = '20240703_tanh'
+    timestamp = '20240704_relu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -84,7 +81,7 @@ if __name__ == '__main__':
                 if mse_loss < vloss_best:
                     plt.figure()
                     plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
-                    plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label=f'Attn_{attn_list[ii]}, MSE = {mse_loss*100:.2f}%')
                     plt.legend()
                     plt.xlabel('lambda(nm)')
                     plt.ylabel('TL')
@@ -99,7 +96,7 @@ if __name__ == '__main__':
                     # Forward, TR
                     plt.figure()
                     plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
-                    plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label=f'Attn_{attn_list[ii]}, MSE = {mse_loss*100:.2f}%')
                     plt.legend()
                     plt.xlabel('lambda(nm)')
                     plt.ylabel('TR')
@@ -117,7 +114,7 @@ if __name__ == '__main__':
                     # Forward, TL
                     plt.figure()
                     plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
-                    plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt2, = plt.plot(lamda, voutput[0, 0:301].cpu(), label=f'Attn_{attn_list[ii]}, MSE = {mse_loss*100:.2f}%')
                     plt.legend()
                     plt.xlabel('lambda(nm)')
                     plt.ylabel('TL')
@@ -132,7 +129,7 @@ if __name__ == '__main__':
                     # Forward, TR
                     plt.figure()
                     plt1, = plt.plot(lamda, vlabels[0, 301:].cpu(), label='Real')
-                    plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label='Attn_{}'.format(attn_list[ii]))
+                    plt2, = plt.plot(lamda, voutput[0, 301:].cpu(), label=f'Attn_{attn_list[ii]}, MSE = {mse_loss*100:.2f}%')
                     plt.legend()
                     plt.xlabel('lambda(nm)')
                     plt.ylabel('TR')
