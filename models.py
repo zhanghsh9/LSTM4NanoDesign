@@ -294,9 +294,9 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
 
 
 # Using tandem NN
-class BackwardPredictionLSTM(nn.Module):
+class BackwardLSTM(nn.Module):
     def __init__(self, input_len, hidden_units, out_len, num_layers):
-        super(BackwardPredictionLSTM, self).__init__()
+        super(BackwardLSTM, self).__init__()
 
         # Ensure hidden_units and num_layers are lists
         assert isinstance(hidden_units, list), "hidden_units must be a list"
@@ -312,6 +312,7 @@ class BackwardPredictionLSTM(nn.Module):
         #self.num_lstms = num_lstms
 
         # Layers
+        '''
         self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units, num_layers=num_layers, batch_first=True)
         self.lstms = nn.ModuleList()
         for i in range(1, len(hidden_units)):
@@ -321,14 +322,20 @@ class BackwardPredictionLSTM(nn.Module):
         # self.lstms = get_clones(
         #    nn.LSTM(input_size=hidden_units, hidden_size=hidden_units, num_layers=num_layers, batch_first=True),
         #    num_lstms)
+        '''
+        self.encoder_decoder = EncoderDecoder(input_len=self.input_len, hidden_units=self.hidden_size,
+                                              num_layers=self.num_layers, activate_func=self.activate_func,
+                                              batch_first=True)
         self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1])
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len)
 
     def forward(self, x):
+        '''
         modified_x = F.relu(self.encoder(x)[0])
         for i in range(len(self.hidden_size)):
             modified_x = F.relu(self.lstms[i](modified_x)[0])
-
+        '''
+        modified_x = self.encoder_decoder(x)
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         out = self.fc1(modified_x)
         return out, self.hidden

@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240704_tanh'
+    timestamp = '20240708_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
