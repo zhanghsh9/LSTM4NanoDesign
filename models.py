@@ -137,7 +137,8 @@ class ForwardSelfAttentionLSTM(nn.Module):
         self.activate_func = activate_func
 
         # Layers
-        self.self_attention = nn.Linear(in_features=self.input_len, out_features=self.input_len, bias=False)   # Self attention layer
+        self.self_attention = nn.Linear(in_features=self.input_len, out_features=self.input_len,
+                                        bias=False)  # Self attention layer
         '''
         self.encoder = nn.LSTM(input_size=self.input_len, hidden_size=hidden_units[0],
                                num_layers=num_layers[0], batch_first=True)
@@ -295,7 +296,7 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
 
 # Using tandem NN
 class BackwardLSTM(nn.Module):
-    def __init__(self, input_len, hidden_units, out_len, num_layers):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func):
         super(BackwardLSTM, self).__init__()
 
         # Ensure hidden_units and num_layers are lists
@@ -309,6 +310,7 @@ class BackwardLSTM(nn.Module):
         self.out_len = out_len
         self.num_layers = num_layers
         self.hidden = None
+        self.activate_func = activate_func
         #self.num_lstms = num_lstms
 
         # Layers

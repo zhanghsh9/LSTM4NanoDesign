@@ -182,7 +182,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     return model, x_axis_loss, x_axis_vloss, loss_record, vloss_record
 
 
-def train_one_epoch_backward(training_loader, optimizer, backward_model, forward_model, loss_fn, device=torch.device('cuda')):
+def train_one_epoch_backward(training_loader, optimizer, backward_model, forward_model, loss_fn=nn.MSELoss(), device=torch.device('cuda')):
     """
 
     :param device:
@@ -229,15 +229,16 @@ def train_one_epoch_backward(training_loader, optimizer, backward_model, forward
     return epoch_loss / (i + 1)
 
 
-def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn, optimizer, scheduler, attention,
-                          timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=torch.device('cuda')):
+def train_epochs_backward(training_loader, test_loader, forward_model, backward_model, loss_fn, optimizer, scheduler,
+                          timestamp, epochs=EPOCHS, start_epoch=0, results_path=RESULTS_PATH, device=torch.device('cuda')):
     """
     Train backward model for epochs
+    :param start_epoch:
+    :param forward_model:
     :param device:
     :param results_path:
     :param timestamp: str
     :param backward_model: torch.nn.Module
-    :param attention: double
     :param scheduler: torch.optim.lr_scheduler.StepLR
     :param epochs: int
     :param test_loader: torch.utils.data.DataLoader
@@ -256,11 +257,6 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
     # Save model path
     model_save_path = os.path.join(results_path, timestamp, MODEL_PATH)
 
-    # Load forward model
-    forward_model_name = 'Forward_mse_vloss_best_attn_{}.pth'.format(attention)
-    forward_model = torch.load(os.path.join(model_save_path, forward_model_name))
-    forward_model.train(True)
-    forward_model.to(device)
     # Freeze parameters
     for paras in forward_model.parameters():
         paras.requires_grad = False
@@ -270,7 +266,7 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
         print('{}: Backward EPOCH {}:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), epoch + 1))
         backward_model.train(True)
         avg_loss = train_one_epoch_backward(training_loader=training_loader, backward_model=backward_model,
-                                            forward_model=forward_model, loss_fn=loss_fn, optimizer=optimizer)
+                                            forward_model=forward_model, loss_fn=loss_fn, optimizer=optimizer, device=device)
         scheduler.step()
 
         # See https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/5
@@ -304,7 +300,7 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
 
             elif avg_vloss < best_vloss:
                 # Save model
-                model_name = 'Backward_mse_vloss_best_attn_{}.pth'.format(attention)
+                model_name = 'Backward_mse_vloss_best.pth'
                 if os.path.exists(os.path.join(model_save_path, model_name)):
                     os.remove(os.path.join(model_save_path, model_name))
                 torch.save(backward_model, os.path.join(model_save_path, model_name))
@@ -324,7 +320,6 @@ def train_epochs_backward(training_loader, test_loader, backward_model, loss_fn,
                 'optimizer_state_dict': optimizer.state_dict(),
                 'avg_loss': avg_loss,
                 'loss_fn': loss_fn,
-                'attention': attention,
                 'timestamp': timestamp,
                 'vloss_record': vloss_record,
                 'x_axis_vloss': x_axis_vloss
