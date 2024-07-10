@@ -256,6 +256,7 @@ def train_epochs_backward(training_loader, test_loader, forward_model, backward_
 
     # Save model path
     model_save_path = os.path.join(results_path, timestamp, MODEL_PATH)
+    forward_model.train(True)
 
     # Freeze parameters
     for paras in forward_model.parameters():
