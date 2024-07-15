@@ -106,11 +106,12 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
         avg_loss = train_one_epoch_forward(training_loader=training_loader, model=model, loss_fn=loss_fn,
                                            optimizer=optimizer, device=device)
         scheduler.step()
-        print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Epoch: {epoch + 1}  Learning Rate: {scheduler.get_last_lr()}')
+        print(
+            f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Epoch: {epoch + 1}  Learning Rate: {scheduler.get_last_lr()}')
 
         # See https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/5
         # if device == 'cuda':
-            # torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
         # Eval
         if epoch % VALID_FREQ == 0 or epoch + 1 == epochs:
@@ -132,7 +133,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
             vloss_record.append(float(avg_vloss))
             x_axis_vloss.append(epoch + 1)
 
-            if epoch == 0:
+            if epoch == start_epoch:
                 best_vloss = avg_vloss
 
             elif avg_vloss < best_vloss:
@@ -182,7 +183,8 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     return model, x_axis_loss, x_axis_vloss, loss_record, vloss_record
 
 
-def train_one_epoch_backward(training_loader, optimizer, backward_model, forward_model, loss_fn=nn.MSELoss(), device=torch.device('cuda')):
+def train_one_epoch_backward(training_loader, optimizer, backward_model, forward_model, loss_fn=nn.MSELoss(),
+                             device=torch.device('cuda')):
     """
 
     :param device:
@@ -230,7 +232,8 @@ def train_one_epoch_backward(training_loader, optimizer, backward_model, forward
 
 
 def train_epochs_backward(training_loader, test_loader, forward_model, backward_model, loss_fn, optimizer, scheduler,
-                          timestamp, epochs=EPOCHS, start_epoch=0, results_path=RESULTS_PATH, device=torch.device('cuda')):
+                          timestamp, epochs=EPOCHS, start_epoch=0, results_path=RESULTS_PATH,
+                          device=torch.device('cuda')):
     """
     Train backward model for epochs
     :param start_epoch:
@@ -263,11 +266,13 @@ def train_epochs_backward(training_loader, test_loader, forward_model, backward_
         paras.requires_grad = False
 
     # Train
-    for epoch in range(epochs):
+    best_vloss = 1e5
+    for epoch in range(start_epoch, epochs):
         print('{}: Backward EPOCH {}:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), epoch + 1))
         backward_model.train(True)
         avg_loss = train_one_epoch_backward(training_loader=training_loader, backward_model=backward_model,
-                                            forward_model=forward_model, loss_fn=loss_fn, optimizer=optimizer, device=device)
+                                            forward_model=forward_model, loss_fn=loss_fn, optimizer=optimizer,
+                                            device=device)
         scheduler.step()
 
         # See https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/5
@@ -296,7 +301,7 @@ def train_epochs_backward(training_loader, test_loader, forward_model, backward_
             vloss_record.append(float(avg_vloss))
             x_axis_vloss.append(epoch + 1)
 
-            if epoch == 0:
+            if epoch == start_epoch:
                 best_vloss = avg_vloss
 
             elif avg_vloss < best_vloss:

@@ -294,9 +294,39 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
         return out, self.hidden
 
 
+# Clamp the output within a reasonable range
+class Clamp(nn.Module):
+    def __init__(self, x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std):
+        super(Clamp, self).__init__()
+        self.x_mean = x_mean
+        self.y_mean = y_mean
+        self.z_mean = z_mean
+        self.l_mean = l_mean
+        self.w_mean = 36.66
+        self.t_mean = t_mean
+        self.x_std = x_std
+        self.y_std = y_std
+        self.z_std = z_std
+        self.l_std = l_std
+        self.w_std = 24.55
+        self.t_std = t_std
+
+    def forward(self, x):
+        for i in range(len(x)):
+            for j in range(int(len(x[i]) / 6)):
+                x[i][6 * j] = (((x[i][6 * j] - 0.5) * 340) - self.x_mean) / self.x_std
+                x[i][6 * j + 1] = (((x[i][6 * j + 1] - 0.5) * 340) - self.y_mean) / self.y_std
+                x[i][6 * j + 2] = (((x[i][6 * j + 2] - 0.5) * 600) - self.z_mean) / self.z_std
+                x[i][6 * j + 3] = (((x[i][6 * j + 3] * 240) + 60) - self.l_mean) / self.l_std
+                x[i][6 * j + 4] = (((x[i][6 * j + 4] * 144) + 6) - self.w_mean) / self.w_std
+                x[i][6 * j + 5] = (((x[i][6 * j + 5] - 0.5) * 180) - self.t_mean) / self.t_std
+        return x
+
+
 # Using tandem NN
 class BackwardLSTM(nn.Module):
-    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func, x_mean, y_mean, z_mean, l_mean,
+                 t_mean, x_std, y_std, z_std, l_std, t_std):
         super(BackwardLSTM, self).__init__()
 
         # Ensure hidden_units and num_layers are lists
@@ -330,6 +360,7 @@ class BackwardLSTM(nn.Module):
                                               batch_first=True)
         self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1])
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len)
+        self.clamp = Clamp(x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std)
 
     def forward(self, x):
         '''
@@ -340,4 +371,6 @@ class BackwardLSTM(nn.Module):
         modified_x = self.encoder_decoder(x)
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         out = self.fc1(modified_x)
+        out = torch.sigmoid(out)
+        out = self.clamp(out)
         return out, self.hidden
