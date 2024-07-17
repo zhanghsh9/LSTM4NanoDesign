@@ -27,7 +27,7 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240714_leakyrelu'
+    timestamp = '20240710_leakyrelu_self_temp3'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards/self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
                 if os.path.exists(os.path.join(figs_save_path, f'TL_forward_best.png')):
                     os.remove(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
                 plt.savefig(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
-                plt.show()
+                # plt.show()
                 plt.close()
 
                 # Forward, TR
@@ -127,7 +127,7 @@ if __name__ == '__main__':
                 if os.path.exists(os.path.join(figs_save_path, f'TR_forward_attn_best.png')):
                     os.remove(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
                 plt.savefig(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
-                plt.show()
+                # plt.show()
                 plt.close()
                 vloss_best_index = i
                 vloss_best = mse_loss
@@ -145,7 +145,7 @@ if __name__ == '__main__':
                 if os.path.exists(os.path.join(figs_save_path, f'TL_forward_{i}.png')):
                     os.remove(os.path.join(figs_save_path, f'TL_forward_{i}.png'))
                 plt.savefig(os.path.join(figs_save_path, f'TL_forward_{i}.png'), dpi=900)
-                plt.show()
+                # plt.show()
                 plt.close()
 
                 # Forward, TR
@@ -161,15 +161,15 @@ if __name__ == '__main__':
                 if os.path.exists(os.path.join(figs_save_path, f'TR_forward_{i}.png')):
                     os.remove(os.path.join(figs_save_path, f'TR_forward_{i}.png'))
                 plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'), dpi=900)
-                plt.show()
+                # plt.show()
                 plt.close()
 
-        forward_mse_loss_sum = backward_mse_loss_sum / (i + 1)
-        forward_mae_loss_sum = backward_mae_loss_sum / (i + 1)
+        backward_mse_loss_sum = backward_mse_loss_sum / (i + 1)
+        backward_mae_loss_sum = backward_mae_loss_sum / (i + 1)
         print(f'Backward MSE = {backward_mse_loss_sum}, MAE = {backward_mae_loss_sum}')
 
     # print(forward_model.self_attention.weight)
     attn_matrix = forward_model.self_attention.weight.to('cpu')
     results_save = {'attn_matrix': attn_matrix.tolist(), 'target': target, 'prediction': prediction,
-                    'tandem_output': tandem_output, 'mse': forward_mse_loss_sum, 'mae': forward_mae_loss_sum, }
+                    'tandem_output': tandem_output, 'mse': backward_mse_loss_sum, 'mae': backward_mae_loss_sum, }
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
