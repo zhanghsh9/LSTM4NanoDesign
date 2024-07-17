@@ -27,14 +27,14 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240710_leakyrelu_self_temp4'
+    timestamp = '20240714_leakyrelu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards/self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
     # Create dataloader
     transform = transforms.Compose([transforms.ToTensor()])
-    _, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=transform,
+    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=transform,
                                      sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, drop_last=True,
                                  pin_memory=True)
@@ -63,16 +63,16 @@ if __name__ == '__main__':
     vloss_best = 100
 
     # Get normalize parameters
-    x_mean = test_dataset.x_mean
-    y_mean = test_dataset.y_mean
-    z_mean = test_dataset.z_mean
-    l_mean = test_dataset.l_mean
-    t_mean = test_dataset.t_mean
-    x_std = test_dataset.x_std
-    y_std = test_dataset.y_std
-    z_std = test_dataset.z_std
-    l_std = test_dataset.l_std
-    t_std = test_dataset.t_std
+    x_mean = train_dataset.x_mean
+    y_mean = train_dataset.y_mean
+    z_mean = train_dataset.z_mean
+    l_mean = train_dataset.l_mean
+    t_mean = train_dataset.t_mean
+    x_std = train_dataset.x_std
+    y_std = train_dataset.y_std
+    z_std = train_dataset.z_std
+    l_std = train_dataset.l_std
+    t_std = train_dataset.t_std
 
     with torch.no_grad():
         for i, data in enumerate(test_dataloader):

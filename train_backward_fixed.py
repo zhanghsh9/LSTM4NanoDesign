@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240710_relu'
+    timestamp = '20240714_relu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards', 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
@@ -84,8 +84,21 @@ if __name__ == '__main__':
     out_len = train_dataset.max_tgt_seq_len
     # Forward
     print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Backward')
+    x_mean = train_dataset.x_mean
+    y_mean = train_dataset.y_mean
+    z_mean = train_dataset.z_mean
+    l_mean = train_dataset.l_mean
+    t_mean = train_dataset.t_mean
+    x_std = train_dataset.x_std
+    y_std = train_dataset.y_std
+    z_std = train_dataset.z_std
+    l_std = train_dataset.l_std
+    t_std = train_dataset.t_std
     backward_model_fixed = BackwardLSTM(input_len=out_len, hidden_units=HIDDEN_UNITS, out_len=input_len,
-                                        num_layers=NUM_LAYERS, activate_func=ACTIVATE_FUNC).to(device)
+                                        num_layers=NUM_LAYERS, activate_func=ACTIVATE_FUNC, x_mean=x_mean,
+                                        y_mean=y_mean, z_mean=z_mean, l_mean=l_mean, t_mean=t_mean,
+                                        x_std=x_std, y_std=y_std, z_std=z_std, l_std=l_std, t_std=t_std,
+                                        device=device).to(device)
 
     for p in backward_model_fixed.parameters():
         if p.dim() > 1:

@@ -250,7 +250,7 @@ def train_epochs_backward(training_loader, test_loader, forward_model, backward_
     :param optimizer: torch.optim.Adam
     :return: model and loss
     """
-
+    torch.autograd.set_detect_anomaly(True)
     # Loss record
     vloss_record = []
     loss_record = []
@@ -274,6 +274,8 @@ def train_epochs_backward(training_loader, test_loader, forward_model, backward_
                                             forward_model=forward_model, loss_fn=loss_fn, optimizer=optimizer,
                                             device=device)
         scheduler.step()
+        print(
+            f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Epoch: {epoch + 1}  Learning Rate: {scheduler.get_last_lr()}')
 
         # See https://discuss.pytorch.org/t/how-can-we-release-gpu-memory-cache/14530/5
         if device == 'cuda':

@@ -16,7 +16,7 @@ import time
 import shutil
 
 from data import create_dataset
-from models import BackwardLSTM
+from models import BackwardLSTM, RangeLoss
 from train import train_epochs_backward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA, ACTIVATE_FUNC
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     backward_model_self = BackwardLSTM(input_len=out_len, hidden_units=HIDDEN_UNITS, out_len=input_len,
                                        num_layers=NUM_LAYERS, activate_func=ACTIVATE_FUNC, x_mean=x_mean, y_mean=y_mean,
                                        z_mean=z_mean, l_mean=l_mean, t_mean=t_mean, x_std=x_std, y_std=y_std,
-                                       z_std=z_std, l_std=l_std, t_std=t_std).to(device)
+                                       z_std=z_std, l_std=l_std, t_std=t_std, device=device).to(device)
 
 
     for p in backward_model_self.parameters():
@@ -110,6 +110,15 @@ if __name__ == '__main__':
     # explanation.
 
     backward_loss_fn_MSE = MSELoss(reduction='mean').to(device)
+    ranges = [
+        (-2.021, 2.0113),
+        (-2.0488, 2.0655),
+        (-1.7734, 1.7538),
+        (-1.4848, 2.3212),
+        (-0.7424, 1.1247),
+        (-1.6584, 1.6643)
+    ]*(int(input_len/6))
+    #backward_loss_fn_MSE = RangeLoss(ranges=ranges).to(device)
     backward_optimizer_Adam_self = Adam(params=backward_model_self.parameters(), lr=LEARNING_RATE)
 
     # See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html

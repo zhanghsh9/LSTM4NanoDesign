@@ -296,37 +296,48 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
 
 # Clamp the output within a reasonable range
 class Clamp(nn.Module):
-    def __init__(self, x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std):
+    def __init__(self, x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std, device):
         super(Clamp, self).__init__()
-        self.x_mean = x_mean
-        self.y_mean = y_mean
-        self.z_mean = z_mean
-        self.l_mean = l_mean
-        self.w_mean = 36.66
-        self.t_mean = t_mean
-        self.x_std = x_std
-        self.y_std = y_std
-        self.z_std = z_std
-        self.l_std = l_std
-        self.w_std = 24.55
-        self.t_std = t_std
+        w_mean, w_std = [36.66], [24.55]
+        self.x_mean = x_mean[0]
+        self.y_mean = y_mean[0]
+        self.z_mean = z_mean[0]
+        self.l_mean = l_mean[0]
+        self.w_mean = w_mean[0]
+        self.t_mean = t_mean[0]
+        self.x_std = x_std[0]
+        self.y_std = y_std[0]
+        self.z_std = z_std[0]
+        self.l_std = l_std[0]
+        self.w_std = w_std[0]
+        self.t_std = t_std[0]
 
     def forward(self, x):
         for i in range(len(x)):
             for j in range(int(len(x[i]) / 6)):
-                x[i][6 * j] = (((x[i][6 * j] - 0.5) * 340) - self.x_mean) / self.x_std
+
+                x[i][6 * j] = (((x[i][6 * j] - torch.Tensor(0.5)) * 340) - self.x_mean) / self.x_std
                 x[i][6 * j + 1] = (((x[i][6 * j + 1] - 0.5) * 340) - self.y_mean) / self.y_std
                 x[i][6 * j + 2] = (((x[i][6 * j + 2] - 0.5) * 600) - self.z_mean) / self.z_std
                 x[i][6 * j + 3] = (((x[i][6 * j + 3] * 240) + 60) - self.l_mean) / self.l_std
                 x[i][6 * j + 4] = (((x[i][6 * j + 4] * 144) + 6) - self.w_mean) / self.w_std
                 x[i][6 * j + 5] = (((x[i][6 * j + 5] - 0.5) * 180) - self.t_mean) / self.t_std
+                '''
+                x[i][6 * j] = torch.clamp(x[i][6 * j], -2.021, 2.0113)
+                x[i][6 * j+1] = torch.clamp(x[i][6 * j+1], -2.0488, 2.0655)
+                x[i][6 * j + 2] = torch.clamp(x[i][6 * j + 2], -1.7734, 1.7538)
+                x[i][6 * j + 3] = torch.clamp(x[i][6 * j + 3], -1.4848, 2.3212)
+                x[i][6 * j + 4] = torch.clamp(x[i][6 * j + 4], -0.7424, 1.1247)
+                x[i][6 * j + 4] = torch.clamp(x[i][6 * j + 4], -1.6584, 1.6643)
+                '''
         return x
+
 
 
 # Using tandem NN
 class BackwardLSTM(nn.Module):
     def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func, x_mean, y_mean, z_mean, l_mean,
-                 t_mean, x_std, y_std, z_std, l_std, t_std):
+                 t_mean, x_std, y_std, z_std, l_std, t_std, device):
         super(BackwardLSTM, self).__init__()
 
         # Ensure hidden_units and num_layers are lists
@@ -360,7 +371,7 @@ class BackwardLSTM(nn.Module):
                                               batch_first=True)
         self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1])
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len)
-        self.clamp = Clamp(x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std)
+        self.clamp = Clamp(x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std, device)
 
     def forward(self, x):
         '''
@@ -371,6 +382,22 @@ class BackwardLSTM(nn.Module):
         modified_x = self.encoder_decoder(x)
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         out = self.fc1(modified_x)
-        out = torch.sigmoid(out)
-        out = self.clamp(out)
+        out = torch.tanh(out)*2
+        # out = self.clamp(out)
         return out, self.hidden
+
+
+# Custom loss function
+class RangeLoss(nn.Module):
+    def __init__(self, ranges):
+        super(RangeLoss, self).__init__()
+        self.ranges = ranges
+
+    def forward(self, output, target):
+        mse_loss = nn.MSELoss()(output, target)
+        penalty = 0.0
+        for i, (min_val, max_val) in enumerate(self.ranges):
+            penalty += torch.mean(torch.clamp(output[:, i] - max_val, min=0.0) ** 2)
+            penalty += torch.mean(torch.clamp(min_val - output[:, i], min=0.0) ** 2)
+        total_loss = mse_loss + penalty
+        return total_loss
