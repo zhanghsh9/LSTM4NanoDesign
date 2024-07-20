@@ -19,7 +19,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:0')
+        device = torch.device('cuda:1')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240710_leakyrelu_self_temp3'
+    timestamp = '20240710_leakyrelu_self_temp4'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards/self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -92,12 +92,13 @@ if __name__ == '__main__':
                 inverse_normalize.append(voutput_backward[6 * j + 1] * y_std + y_mean)
                 inverse_normalize.append(voutput_backward[6 * j + 2] * z_std + z_mean)
                 inverse_normalize.append(voutput_backward[6 * j + 3] * l_std + l_mean)
-                r = voutput_backward[6 * j + 3] / voutput_backward[6 * j + 4]  # r = l / w
+                r = abs(voutput_backward[6 * j + 3] / voutput_backward[6 * j + 4])  # r = l / w
                 inverse_normalize.append(inverse_normalize[-1] / r)  # w = l / r
                 inverse_normalize.append(voutput_backward[6 * j + 5] * t_std + t_mean)
             prediction.append(inverse_normalize)
             target.append(vlabels.to('cpu').view(-1).tolist())
             tandem_output.append(voutput_forward.to('cpu').view(-1).tolist())
+            '''
             if mse_loss < vloss_best:
                 plt.figure()
                 plt1, = plt.plot(lamda, vlabels[0, 0:301].cpu(), label='Real')
@@ -163,7 +164,7 @@ if __name__ == '__main__':
                 plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'), dpi=900)
                 # plt.show()
                 plt.close()
-
+            '''
         backward_mse_loss_sum = backward_mse_loss_sum / (i + 1)
         backward_mae_loss_sum = backward_mae_loss_sum / (i + 1)
         print(f'Backward MSE = {backward_mse_loss_sum}, MAE = {backward_mae_loss_sum}')
