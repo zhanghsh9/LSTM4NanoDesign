@@ -27,7 +27,7 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240714_relu'
+    timestamp = '20240721_relu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards/fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -107,11 +107,11 @@ if __name__ == '__main__':
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TL')
-                plt.title('Forward')
+                plt.title('Backward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'TL_forward_best.png')):
-                    os.remove(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
+                if os.path.exists(os.path.join(figs_save_path, f'TL_backward_best.png')):
+                    os.remove(os.path.join(figs_save_path, f'TL_backward_best.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TL_backward_best.png'))
                 # plt.show()
                 plt.close()
 
@@ -123,11 +123,11 @@ if __name__ == '__main__':
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TR')
-                plt.title('Forward')
+                plt.title('Backward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'TR_forward_attn_best.png')):
-                    os.remove(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
+                if os.path.exists(os.path.join(figs_save_path, f'TR_backward_best.png')):
+                    os.remove(os.path.join(figs_save_path, f'TR_backward_best.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TR_backward_best.png'))
                 # plt.show()
                 plt.close()
                 vloss_best_index = i
@@ -141,11 +141,11 @@ if __name__ == '__main__':
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TL')
-                plt.title('Forward')
+                plt.title('Backward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'TL_forward_{i}.png')):
-                    os.remove(os.path.join(figs_save_path, f'TL_forward_{i}.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TL_forward_{i}.png'), dpi=900)
+                if os.path.exists(os.path.join(figs_save_path, f'TL_backward_{i}.png')):
+                    os.remove(os.path.join(figs_save_path, f'TL_backward_{i}.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TL_backward_{i}.png'), dpi=900)
                 # plt.show()
                 plt.close()
 
@@ -157,11 +157,11 @@ if __name__ == '__main__':
                 plt.legend()
                 plt.xlabel('lambda(nm)')
                 plt.ylabel('TR')
-                plt.title('Forward')
+                plt.title('Backward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'TR_forward_{i}.png')):
-                    os.remove(os.path.join(figs_save_path, f'TR_forward_{i}.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'), dpi=900)
+                if os.path.exists(os.path.join(figs_save_path, f'TR_backward_{i}.png')):
+                    os.remove(os.path.join(figs_save_path, f'TR_backward_{i}.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TR_backward_{i}.png'), dpi=900)
                 # plt.show()
                 plt.close()
 
