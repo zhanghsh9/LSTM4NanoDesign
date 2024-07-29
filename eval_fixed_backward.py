@@ -27,8 +27,8 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240723_leakyrelu'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards/self_attention')
+    timestamp = '20240714_relu'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards/fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     # Load models
     # model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
-    forward_model_name = f'self_attention_forward.pth'
+    forward_model_name = f'fixed_attention_forward.pth'
     forward_model = torch.load(os.path.join(model_save_path, forward_model_name))
     forward_model.to(device)
     forward_model.eval()
@@ -109,9 +109,9 @@ if __name__ == '__main__':
                 plt.ylabel('TL')
                 plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'TL_backward_best.png')):
-                    os.remove(os.path.join(figs_save_path, f'TL_backward_best.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TL_backward_best.png'), dpi=900)
+                if os.path.exists(os.path.join(figs_save_path, f'TL_forward_best.png')):
+                    os.remove(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
                 # plt.show()
                 plt.close()
 
@@ -125,9 +125,9 @@ if __name__ == '__main__':
                 plt.ylabel('TR')
                 plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'TR_backward_best.png')):
-                    os.remove(os.path.join(figs_save_path, f'TR_backward_best.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TR_backward_best.png'), dpi=900)
+                if os.path.exists(os.path.join(figs_save_path, f'TR_forward_attn_best.png')):
+                    os.remove(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
                 # plt.show()
                 plt.close()
                 vloss_best_index = i
@@ -143,9 +143,9 @@ if __name__ == '__main__':
                 plt.ylabel('TL')
                 plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'TL_backward_{i}.png')):
-                    os.remove(os.path.join(figs_save_path, f'TL_backward_{i}.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TL_backward_{i}.png'), dpi=900)
+                if os.path.exists(os.path.join(figs_save_path, f'TL_forward_{i}.png')):
+                    os.remove(os.path.join(figs_save_path, f'TL_forward_{i}.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TL_forward_{i}.png'), dpi=900)
                 # plt.show()
                 plt.close()
 
@@ -159,9 +159,9 @@ if __name__ == '__main__':
                 plt.ylabel('TR')
                 plt.title('Forward')
 
-                if os.path.exists(os.path.join(figs_save_path, f'TR_backward_{i}.png')):
-                    os.remove(os.path.join(figs_save_path, f'TR_backward_{i}.png'))
-                plt.savefig(os.path.join(figs_save_path, f'TR_backward_{i}.png'), dpi=900)
+                if os.path.exists(os.path.join(figs_save_path, f'TR_forward_{i}.png')):
+                    os.remove(os.path.join(figs_save_path, f'TR_forward_{i}.png'))
+                plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'), dpi=900)
                 # plt.show()
                 plt.close()
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
         print(f'Backward MSE = {backward_mse_loss_sum}, MAE = {backward_mae_loss_sum}')
 
     # print(forward_model.self_attention.weight)
-    attn_matrix = forward_model.self_attention.weight.to('cpu')
-    results_save = {'attn_matrix': attn_matrix.tolist(), 'target': target, 'prediction': prediction,
-                    'tandem_output': tandem_output, 'mse': backward_mse_loss_sum, 'mae': backward_mae_loss_sum, }
+    # attn_matrix = forward_model.self_attention.weight.to('cpu')
+    results_save = {'target': target, 'prediction': prediction, 'tandem_output': tandem_output,
+                    'mse': backward_mse_loss_sum, 'mae': backward_mae_loss_sum, }
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
