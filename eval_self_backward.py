@@ -27,7 +27,7 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240723_leakyrelu'
+    timestamp = '20240726_leakyrelu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards/self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
