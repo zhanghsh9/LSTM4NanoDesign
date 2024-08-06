@@ -147,7 +147,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
             vloss_record.append(float(avg_vloss))
             x_axis_vloss.append(epoch + 1)
         else:
-            print('{}: Training Loss:{}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), avg_loss))
+            print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Training Loss:{avg_loss}, best vloss: {best_vloss}')
 
         # Save checkpoint
         model_checkpoint_path = os.path.join(model_save_path, 'forward_checkpoint.pth')
@@ -317,7 +317,7 @@ def train_epochs_backward(training_loader, test_loader, forward_model, backward_
             vloss_record.append(float(avg_vloss))
             x_axis_vloss.append(epoch + 1)
         else:
-            print('{}: Training Loss:{}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()), avg_loss))
+            print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Training Loss:{avg_loss}, best vloss: {best_vloss}')
 
             # Save checkpoint
             model_checkpoint_path = os.path.join(model_save_path, 'backward_checkpoint.pth')
