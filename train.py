@@ -366,3 +366,18 @@ def load_checkpoint(checkpoint_path, forward):
     x_axis_vloss = checkpoint['x_axis_vloss']
 
     return model, optimizer, epoch, loss, loss_fn, attention, timestamp, vloss_record, x_axis_vloss
+
+
+def custom_loss(forward_output, backward_output, min_vals, max_vals, alpha=1.0):
+    # Transform the output of the backward network to match the valid range
+    max_vals=[170/100.99, 170/100.99, 300/176.06, (300-180)/70.71, ]
+    transformed_backward_output = constrained_transform(backward_output, min_vals, max_vals)
+
+    # Compute the loss as the MSE between the transformed output and forward output
+    mse_loss = torch.mean((forward_output - transformed_backward_output) ** 2)
+
+    # Additional penalty for the backward output being out of the valid range can be applied if needed
+    penalty_loss = torch.mean(range_penalty(transformed_backward_output, min_vals, max_vals, alpha))
+
+    total_loss = mse_loss + penalty_loss
+    return total_loss
