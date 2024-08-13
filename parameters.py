@@ -18,7 +18,7 @@ SAMPLE_RATE = 1
 # Model
 # See https://datascience.stackexchange.com/questions/93768/dimensions-of-transformer-dmodel-and-depth
 ATTENTION = 3
-HIDDEN_UNITS = [768, 768, 768, 768, 1024]
+HIDDEN_UNITS = [2048, 2048, 2048, 2048]
 # DROPOUT = 0.1
 NUM_LAYERS = [1] * len(HIDDEN_UNITS)
 # NUM_LSTMS = 3
@@ -27,8 +27,8 @@ ACTIVATE_FUNC = nn.Tanh()
 
 # Train
 LEARNING_RATE = 1e-3
-EPOCHS = 10000
+EPOCHS = 5000
 VALID_FREQ = int(EPOCHS / 8) if EPOCHS < 200 else int(EPOCHS / 16) if EPOCHS < 500 else int(EPOCHS / 32)
 # Learning rate drop rate
 STEP_SIZE = 800
-GAMMA = 0.75
+GAMMA = 0.7

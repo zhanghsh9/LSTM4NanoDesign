@@ -28,7 +28,7 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240708_leakyrelu'
+    timestamp = '20240806_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -90,7 +90,6 @@ if __name__ == '__main__':
                     if os.path.exists(os.path.join(figs_save_path, f'TL_forward_attn_{attn_list[ii]}_best.png')):
                         os.remove(os.path.join(figs_save_path, f'TL_forward_attn_{attn_list[ii]}_best.png'))
                     plt.savefig(os.path.join(figs_save_path, f'TL_forward_attn_{attn_list[ii]}_best.png'))
-                    plt.show()
                     plt.close()
 
                     # Forward, TR
@@ -105,7 +104,6 @@ if __name__ == '__main__':
                     if os.path.exists(os.path.join(figs_save_path, f'TR_forward_attn_{attn_list[ii]}_best.png')):
                         os.remove(os.path.join(figs_save_path, f'TR_forward_attn_{attn_list[ii]}_best.png'))
                     plt.savefig(os.path.join(figs_save_path, f'TR_forward_attn_{attn_list[ii]}_best.png'))
-                    plt.show()
                     plt.close()
                     vloss_best_index = i
                     vloss_best = mse_loss
@@ -123,7 +121,6 @@ if __name__ == '__main__':
                     if os.path.exists(os.path.join(figs_save_path, f'TL_forward_{i}_attn_{attn_list[ii]}.png')):
                         os.remove(os.path.join(figs_save_path, f'TL_forward_{i}_attn_{attn_list[ii]}.png'))
                     plt.savefig(os.path.join(figs_save_path, f'TL_forward_{i}_attn_{attn_list[ii]}.png'))
-                    plt.show()
                     plt.close()
 
                     # Forward, TR
@@ -138,7 +135,6 @@ if __name__ == '__main__':
                     if os.path.exists(os.path.join(figs_save_path, f'TR_forward_{i}_attn_{attn_list[ii]}.png')):
                         os.remove(os.path.join(figs_save_path, f'TR_forward_{i}_attn_{attn_list[ii]}.png'))
                     plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}_attn_{attn_list[ii]}.png'))
-                    plt.show()
                     plt.close()
 
     for ii in range(len(attn_list)):

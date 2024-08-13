@@ -27,18 +27,18 @@ if __name__ == '__main__':
     vloss_best_index = 0
     vloss_best_tandem = 100
     loss_fn = MSELoss()
-    fdtd_mse_sum = 0
+    fdtd_mse_rec = []
 
     for i in range(len(target)):
         mse_loss_tandem = loss_fn(torch.Tensor(target[i]), torch.Tensor(tandem_output[i])).item()
         mse_loss_fdtd = loss_fn(torch.Tensor(target[i]), torch.Tensor(fdtd_results[i])).item()
-        fdtd_mse_sum = fdtd_mse_sum + mse_loss_fdtd
+        fdtd_mse_rec.append(mse_loss_fdtd)
 
         if mse_loss_fdtd < vloss_best:
             vloss_best_index = i
             vloss_best = mse_loss_fdtd
             vloss_best_tandem = mse_loss_tandem
-
+        '''
         plt.figure()
         plt1, = plt.plot(lamda, target[i, 0:301], label='Target')
         plt2, = plt.plot(lamda, tandem_output[i, 0:301],
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
     fdtd_mse_sum = fdtd_mse_sum / (i + 1)
     print(f'Backward FDTD MSE = {fdtd_mse_sum}')
-
+    
     plt.figure()
     plt1, = plt.plot(lamda, target[vloss_best_index, 0:301], label='Target')
     plt2, = plt.plot(lamda, tandem_output[vloss_best_index, 0:301],
@@ -109,3 +109,5 @@ if __name__ == '__main__':
     plt.savefig(os.path.join(figs_save_path, f'TR_backward_best.png'), dpi=900)
     # plt.show()
     plt.close()
+    '''
+    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'fdtd_mes_rec.mat'), {'fdtd_mes_rec': fdtd_mse_rec})

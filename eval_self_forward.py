@@ -20,7 +20,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:3')
+        device = torch.device('cuda:2')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240708_leakyrelu'
+    timestamp = '20240808_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -81,7 +81,6 @@ if __name__ == '__main__':
                 if os.path.exists(os.path.join(figs_save_path, f'TL_forward_best.png')):
                     os.remove(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
                 plt.savefig(os.path.join(figs_save_path, f'TL_forward_attn_best.png'))
-                plt.show()
                 plt.close()
 
                 # Forward, TR
@@ -96,8 +95,8 @@ if __name__ == '__main__':
                 if os.path.exists(os.path.join(figs_save_path, f'TR_forward_attn_best.png')):
                     os.remove(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
                 plt.savefig(os.path.join(figs_save_path, f'TR_forward_attn_best.png'))
-                plt.show()
                 plt.close()
+
                 vloss_best_index = i
                 vloss_best = mse_loss
             if i in range(100):
@@ -113,7 +112,6 @@ if __name__ == '__main__':
                 if os.path.exists(os.path.join(figs_save_path, f'TL_forward_{i}.png')):
                     os.remove(os.path.join(figs_save_path, f'TL_forward_{i}.png'))
                 plt.savefig(os.path.join(figs_save_path, f'TL_forward_{i}.png'), dpi=900)
-                plt.show()
                 plt.close()
 
                 # Forward, TR
@@ -128,7 +126,6 @@ if __name__ == '__main__':
                 if os.path.exists(os.path.join(figs_save_path, f'TR_forward_{i}.png')):
                     os.remove(os.path.join(figs_save_path, f'TR_forward_{i}.png'))
                 plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'), dpi=900)
-                plt.show()
                 plt.close()
 
         forward_mse_loss_sum = forward_mse_loss_sum / (i + 1)
