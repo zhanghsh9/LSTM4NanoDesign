@@ -11,6 +11,24 @@ import time
 from parameters import DATA_PATH, RODS, SAMPLE_RATE
 
 
+def get_filename_delta(path, rods):
+    """
+    Get training data filename, .mat
+    :param path: str
+    :param rods: int
+    :return: filename
+    """
+
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            if int(name[13]) == rods and name[0:6] == 'deltaed':
+                if name[-7:-4] == 'test':
+                    test_filename = name
+                elif name[-8:-4] == 'train':
+                    train_filename = name
+    return train_filename, test_filename
+
+
 def get_filename(path, rods):
     """
     Get training data filename, .mat
@@ -70,6 +88,36 @@ def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=Non
                                       sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
     test_dataset = GoldNanorodSingle(data_path=test_data_path, use_TL_TR=use_TL_TR, transform=transform,
                                      sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
+
+    return train_dataset, test_dataset
+
+
+def create_dataset_delta(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
+                         sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=torch.device('cuda')):
+    """
+    Create dataset
+    :param device:
+    :param make_spectrum_int:
+    :param data_path: str
+    :param rods: int or str
+    :param use_TL_TR: bool
+    :param transform: torchvision.transforms
+    :param sample_rate: int
+    :return: dataset
+    """
+
+    train_filename, test_filename = get_filename_delta(data_path, rods)
+
+    train_data_path = os.path.join(DATA_PATH, train_filename)
+    test_data_path = os.path.join(DATA_PATH, test_filename)
+    print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Using {train_data_path} as training data')
+    print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Using {test_data_path} as test data')
+    print()
+
+    train_dataset = GoldNanorodDelta(data_path=train_data_path, use_TL_TR=use_TL_TR, transform=transform,
+                                     sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
+    test_dataset = GoldNanorodDelta(data_path=test_data_path, use_TL_TR=use_TL_TR, transform=transform,
+                                    sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
 
     return train_dataset, test_dataset
 
@@ -214,6 +262,81 @@ class GoldNanorodSingle(Dataset):
 
     def print(self):
         print('class GoldNanorodSingle with: ')
+        print('data path = {}'.format(self.data_path))
+        print('rods = {}'.format(self.rods))
+        print('device = {}'.format(self.device))
+        print('use TL_TR = {}'.format(self.use_TL_TR))
+        print('make spectrum integer = {}'.format(self.make_spectrum_int))
+        print('transform = {}'.format(self.transform))
+        print('spectrum sample rate = {}'.format(self.sample_rate))
+        print('source size = [{}, {}]'.format(len(self.norm_normal00), self.max_src_seq_len))
+        print('target size = [{}, {}]'.format(len(self.spectra), self.max_tgt_seq_len))
+
+    def print_item(self, index):
+        print('source = {}'.format(self.norm_normal00[index]))
+        print('target = {}'.format(self.spectra[index]))
+
+
+class GoldNanorodDelta(Dataset):
+    def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
+                 sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=torch.device('cuda')):
+        data = scio.loadmat(data_path)
+
+        # Parameters
+        self.data_path = data_path
+        self.rods = rods
+        self.use_TL_TR = use_TL_TR
+        self.transform = transform
+        self.sample_rate = sample_rate
+        self.make_spectrum_int = make_spectrum_int
+        self.device = device
+
+        norm_normal00 = data['norm_normal00']
+        self.norm_normal00 = torch.Tensor(norm_normal00)
+        self.delta_x_mean = data['delta_x_mean']
+        self.delta_x_std = data['delta_x_std']
+        self.delta_y_mean = data['delta_y_mean']
+        self.delta_y_std = data['delta_y_std']
+        self.delta_z_mean = data['delta_z_mean']
+        self.delta_z_std = data['delta_z_std']
+        self.delta_l_mean = data['delta_l_mean']
+        self.delta_l_std = data['delta_l_std']
+        self.delta_t_mean = data['delta_t_mean']
+        self.delta_t_std = data['delta_t_std']
+        self.r = data['r']
+
+        if self.make_spectrum_int:
+            TL = data['TL_int']
+            TR = data['TR_int']
+            TL_TR = data['TL_TR_int']
+        else:
+            TL = data['TL_float']
+            TR = data['TR_float']
+            TL_TR = data['TL_TR_float']
+
+        if self.use_TL_TR:
+            self.spectra = [list(l[::sample_rate]) for l in TL_TR]
+        else:
+            self.spectra = [list(l[::sample_rate]) for l in TL]
+
+        # Get seq len
+        self.src_len = torch.Tensor([len(l) for l in self.norm_normal00]).to(torch.int32)
+        self.tgt_len = torch.Tensor([len(l) for l in self.spectra]).to(torch.int32)
+        self.max_src_seq_len = int(max(self.src_len))
+        self.max_tgt_seq_len = int(max(self.tgt_len))
+
+        self.spectra = torch.Tensor(self.spectra)
+
+    def __len__(self):
+        return len(self.norm_normal00)
+
+    def __getitem__(self, index):
+        paras = self.norm_normal00[index]
+        result = self.spectra[index]
+        return paras, result
+
+    def print(self):
+        print('class GoldNanorodDelta with: ')
         print('data path = {}'.format(self.data_path))
         print('rods = {}'.format(self.rods))
         print('device = {}'.format(self.device))

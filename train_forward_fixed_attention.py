@@ -33,13 +33,13 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:2')
+        device = torch.device('cuda:3')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240809_tanh'
+    timestamp = '20240813_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'fixed_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
@@ -153,4 +153,4 @@ if __name__ == '__main__':
         end_time = time.time()
         print()
         print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
-                                               time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
+                                               time.strftime('%d %H h %M m %S s ', time.gmtime(end_time - start_time))))
