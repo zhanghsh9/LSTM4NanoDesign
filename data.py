@@ -39,7 +39,7 @@ def get_filename(path, rods):
 
     for root, dirs, files in os.walk(path):
         for name in files:
-            if int(name[5]) == rods:
+            if name[5] == f'{rods}':
                 if name[12:-4] == 'test':
                     test_filename = name
                 elif name[12:-4] == 'train':
