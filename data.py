@@ -21,10 +21,10 @@ def get_filename_delta(path, rods):
 
     for root, dirs, files in os.walk(path):
         for name in files:
-            if int(name[13]) == rods and name[0:6] == 'deltaed':
-                if name[-7:-4] == 'test':
+            if name[13] == f'{rods}' and name.startswith('deltaed'):
+                if name.endswith('test.mat'):
                     test_filename = name
-                elif name[-8:-4] == 'train':
+                elif name.endswith('train.mat'):
                     train_filename = name
     return train_filename, test_filename
 
@@ -299,10 +299,10 @@ class GoldNanorodDelta(Dataset):
         self.delta_y_std = data['delta_y_std']
         self.delta_z_mean = data['delta_z_mean']
         self.delta_z_std = data['delta_z_std']
-        self.delta_l_mean = data['delta_l_mean']
-        self.delta_l_std = data['delta_l_std']
-        self.delta_t_mean = data['delta_t_mean']
-        self.delta_t_std = data['delta_t_std']
+        self.l_mean = data['l_mean']
+        self.l_std = data['l_std']
+        self.t_mean = data['t_mean']
+        self.t_std = data['t_std']
         self.r = data['r']
 
         if self.make_spectrum_int:
