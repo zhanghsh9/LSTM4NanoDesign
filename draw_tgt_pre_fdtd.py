@@ -38,7 +38,7 @@ if __name__ == '__main__':
             vloss_best_index = i
             vloss_best = mse_loss_fdtd
             vloss_best_tandem = mse_loss_tandem
-        '''
+
         plt.figure()
         plt1, = plt.plot(lamda, target[i, 0:301], label='Target')
         plt2, = plt.plot(lamda, tandem_output[i, 0:301],
@@ -50,9 +50,9 @@ if __name__ == '__main__':
         plt.ylabel('TL')
         plt.title('Backward')
 
-        if os.path.exists(os.path.join(figs_save_path, f'TL_backward_{i}.png')):
-            os.remove(os.path.join(figs_save_path, f'TL_backward_{i}.png'))
-        plt.savefig(os.path.join(figs_save_path, f'TL_backward_{i}.png'), dpi=900)
+        if os.path.exists(os.path.join(figs_save_path, f'TL_backward_{i}_tgt_pred_fdtd.png')):
+            os.remove(os.path.join(figs_save_path, f'TL_backward_{i}_tgt_pred_fdtd.png'))
+        plt.savefig(os.path.join(figs_save_path, f'TL_backward_{i}_tgt_pred_fdtd.png'), dpi=900)
         # plt.show()
         plt.close()
 
@@ -67,14 +67,41 @@ if __name__ == '__main__':
         plt.ylabel('TR')
         plt.title('Backward')
 
-        if os.path.exists(os.path.join(figs_save_path, f'TR_backward_{i}.png')):
-            os.remove(os.path.join(figs_save_path, f'TR_backward_{i}.png'))
-        plt.savefig(os.path.join(figs_save_path, f'TR_backward_{i}.png'), dpi=900)
+        if os.path.exists(os.path.join(figs_save_path, f'TR_backward_{i}_tgt_pred_fdtd.png')):
+            os.remove(os.path.join(figs_save_path, f'TR_backward_{i}_tgt_pred_fdtd.png'))
+        plt.savefig(os.path.join(figs_save_path, f'TR_backward_{i}_tgt_pred_fdtd.png'), dpi=900)
         # plt.show()
         plt.close()
 
-    fdtd_mse_sum = fdtd_mse_sum / (i + 1)
-    print(f'Backward FDTD MSE = {fdtd_mse_sum}')
+        plt.figure()
+        plt1, = plt.plot(lamda, target[i, 0:301], label='Target')
+        plt3, = plt.plot(lamda, fdtd_results[i, 0:301],
+                         label=f'FDTD simulation, MSE = {mse_loss_fdtd * 100:.2f}%')
+        plt.legend()
+        plt.xlabel('lambda(nm)')
+        plt.ylabel('TL')
+        plt.title('Backward')
+
+        if os.path.exists(os.path.join(figs_save_path, f'TL_backward_{i}_tgt_fdtd.png')):
+            os.remove(os.path.join(figs_save_path, f'TL_backward_{i}_tgt_fdtd.png'))
+        plt.savefig(os.path.join(figs_save_path, f'TL_backward_{i}_tgt_fdtd.png'), dpi=900)
+        # plt.show()
+        plt.close()
+
+        plt.figure()
+        plt1, = plt.plot(lamda, target[i, 301:], label='Target')
+        plt3, = plt.plot(lamda, fdtd_results[i, 301:],
+                         label=f'FDTD simulation, MSE = {mse_loss_fdtd * 100:.2f}%')
+        plt.legend()
+        plt.xlabel('lambda(nm)')
+        plt.ylabel('TR')
+        plt.title('Backward')
+
+        if os.path.exists(os.path.join(figs_save_path, f'TR_backward_{i}_tgt_fdtd.png')):
+            os.remove(os.path.join(figs_save_path, f'TR_backward_{i}_tgt_fdtd.png'))
+        plt.savefig(os.path.join(figs_save_path, f'TR_backward_{i}_tgt_fdtd.png'), dpi=900)
+        # plt.show()
+        plt.close()
     
     plt.figure()
     plt1, = plt.plot(lamda, target[vloss_best_index, 0:301], label='Target')
@@ -87,9 +114,9 @@ if __name__ == '__main__':
     plt.ylabel('TL')
     plt.title('Backward')
 
-    if os.path.exists(os.path.join(figs_save_path, f'TL_backward_best.png')):
-        os.remove(os.path.join(figs_save_path, f'TL_backward_best.png'))
-    plt.savefig(os.path.join(figs_save_path, f'TL_backward_best.png'), dpi=900)
+    if os.path.exists(os.path.join(figs_save_path, f'TL_backward_best_tgt_pred_fdtd.png')):
+        os.remove(os.path.join(figs_save_path, f'TL_backward_best_tgt_pred_fdtd.png'))
+    plt.savefig(os.path.join(figs_save_path, f'TL_backward_best_tgt_pred_fdtd.png'), dpi=900)
     # plt.show()
     plt.close()
 
@@ -104,10 +131,10 @@ if __name__ == '__main__':
     plt.ylabel('TR')
     plt.title('Backward')
 
-    if os.path.exists(os.path.join(figs_save_path, f'TR_backward_best.png')):
-        os.remove(os.path.join(figs_save_path, f'TR_backward_best.png'))
-    plt.savefig(os.path.join(figs_save_path, f'TR_backward_best.png'), dpi=900)
+    if os.path.exists(os.path.join(figs_save_path, f'TR_backward_best_tgt_pred_fdtd.png')):
+        os.remove(os.path.join(figs_save_path, f'TR_backward_best_tgt_pred_fdtd.png'))
+    plt.savefig(os.path.join(figs_save_path, f'TR_backward_best_tgt_pred_fdtd.png'), dpi=900)
     # plt.show()
     plt.close()
-    '''
-    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'fdtd_mes_rec.mat'), {'fdtd_mes_rec': fdtd_mse_rec})
+
+    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'fdtd_mse_rec.mat'), {'fdtd_mse_rec': fdtd_mse_rec})
