@@ -28,15 +28,16 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240815_relu'
+    timestamp = '20240819_relu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention/deltaed')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
     # Create dataloader
     transform = transforms.Compose([transforms.ToTensor()])
-    _, test_dataset = create_dataset_delta(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=transform,
-                                     sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
+    _, test_dataset = create_dataset_delta(data_path=os.path.join(RESULTS_PATH, timestamp, 'data'), rods=RODS,
+                                           use_TL_TR=True, transform=transform, sample_rate=SAMPLE_RATE,
+                                           make_spectrum_int=False, device=device)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, drop_last=True,
                                  pin_memory=True)
     # Forward prediction

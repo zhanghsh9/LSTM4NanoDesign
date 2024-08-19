@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240815_tanh'
+    timestamp = '20240821_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention/deltaed')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
@@ -148,4 +148,4 @@ if __name__ == '__main__':
     end_time = time.time()
     print()
     print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
-                                           time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
+                                           time.strftime('%d Days %H h %M m %S s ', time.gmtime(end_time - start_time))))
