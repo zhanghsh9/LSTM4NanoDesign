@@ -294,6 +294,53 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
         return out, self.hidden
 
 
+class VectorAttention(nn.Module):
+    def __init__(self, input_size):
+        super(VectorAttention, self).__init__()
+        self.input_size = input_size
+        self.attention_vector = nn.Parameter(torch.randn(input_size))
+        self.attention_vector.requires_grad = True
+
+    def forward(self, x):
+        dot_x = x * self.attention_vector
+        return dot_x
+
+
+
+class ForwardVectorAttentionLSTM(nn.Module):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func):
+        super(ForwardVectorAttentionLSTM, self).__init__()
+
+        # Ensure hidden_units and num_layers are lists
+        assert isinstance(hidden_units, list), "hidden_units must be a list"
+        assert isinstance(num_layers, list), "num_layers must be a list"
+        assert len(hidden_units) == len(num_layers), "hidden_units and num_layers must have the same length"
+
+        # Parameters
+        self.input_len = input_len
+        self.hidden_size = hidden_units
+        self.num_layers = num_layers
+        self.hidden = None
+        self.out_len = out_len
+        self.activate_func = activate_func
+
+        # Layers
+        self.vector_attention = VectorAttention(self.input_len)
+        self.encoder_decoder = EncoderDecoder(input_len=self.input_len, hidden_units=self.hidden_size,
+                                              num_layers=self.num_layers, activate_func=self.activate_func,
+                                              batch_first=True)
+        self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
+        self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
+
+    def forward(self, x):
+        attentioned_x = self.vector_attention(x)
+        modified_x = self.encoder_decoder(attentioned_x)
+        # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
+        out = self.fc1(modified_x)
+        out = torch.sigmoid(out)
+        return out, self.hidden
+
+
 # Clamp the output within a reasonable range
 class Clamp(nn.Module):
     def __init__(self, x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std, device):
@@ -315,7 +362,6 @@ class Clamp(nn.Module):
     def forward(self, x):
         for i in range(len(x)):
             for j in range(int(len(x[i]) / 6)):
-
                 x[i][6 * j] = (((x[i][6 * j] - torch.Tensor(0.5)) * 340) - self.x_mean) / self.x_std
                 x[i][6 * j + 1] = (((x[i][6 * j + 1] - 0.5) * 340) - self.y_mean) / self.y_std
                 x[i][6 * j + 2] = (((x[i][6 * j + 2] - 0.5) * 600) - self.z_mean) / self.z_std
@@ -331,7 +377,6 @@ class Clamp(nn.Module):
                 x[i][6 * j + 4] = torch.clamp(x[i][6 * j + 4], -1.6584, 1.6643)
                 '''
         return x
-
 
 
 # Using tandem NN
@@ -382,7 +427,7 @@ class BackwardLSTM(nn.Module):
         modified_x = self.encoder_decoder(x)
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         out = self.fc1(modified_x)
-        out = torch.tanh(out)*2
+        out = torch.tanh(out) * 2
         # out = self.clamp(out)
         return out, self.hidden
 
