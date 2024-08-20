@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 
 from datetime import datetime
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import time
 import os
 import random
@@ -89,7 +89,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     model_save_path = os.path.join(results_path, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
-
+    '''
     # Set up interactive mode for matplotlib
     plt.ion()
     fig, ax = plt.subplots()
@@ -98,6 +98,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     train_line, = ax.plot([], [], label='Training Loss')
     val_line, = ax.plot([], [], label='Validation Loss')
     plt.legend()
+    '''
 
     # Train
     for epoch in range(start_epoch, epochs):
@@ -170,6 +171,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
         loss_record.append(float(avg_loss))
         x_axis_loss.append(epoch + 1)
 
+        '''
         # Update the plot
         train_line.set_xdata(x_axis_loss)
         train_line.set_ydata(loss_record)
@@ -180,6 +182,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
         fig.canvas.draw()
         fig.canvas.flush_events()
     plt.close()
+    '''
     return model, x_axis_loss, x_axis_vloss, loss_record, vloss_record
 
 
