@@ -20,7 +20,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:1')
+        device = torch.device('cuda:2')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         print(f'Forward MSE = {forward_mse_loss_sum}, MAE = {forward_mae_loss_sum}')
 
     # print(forward_model.self_attention.weight)
-    attn_matrix = forward_model.self_attention.weight.to('cpu')
+    attn_matrix = forward_model.vector_attention.attention_vector.to('cpu')
     results_save = {'attn_matrix': attn_matrix.tolist(), 'real': real, 'prediction': prediction,
                     'mse': forward_mse_loss_sum, 'mae': forward_mae_loss_sum}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
