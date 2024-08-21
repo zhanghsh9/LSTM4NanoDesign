@@ -18,12 +18,12 @@ SAMPLE_RATE = 1
 # Model
 # See https://datascience.stackexchange.com/questions/93768/dimensions-of-transformer-dmodel-and-depth
 ATTENTION = 3
-HIDDEN_UNITS = [768, 768, 768, 768, 768]
+HIDDEN_UNITS = [512, 512, 512, 512, 512]
 # DROPOUT = 0.1
 NUM_LAYERS = [1] * len(HIDDEN_UNITS)
 # NUM_LSTMS = 3
 NUM_HEADS = 1
-ACTIVATE_FUNC = nn.Tanh()
+ACTIVATE_FUNC = nn.ReLU()
 
 # Train
 LEARNING_RATE = 1e-3
