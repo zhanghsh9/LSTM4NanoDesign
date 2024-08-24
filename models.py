@@ -381,8 +381,7 @@ class Clamp(nn.Module):
 
 # Using tandem NN
 class BackwardLSTM(nn.Module):
-    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func, x_mean, y_mean, z_mean, l_mean,
-                 t_mean, x_std, y_std, z_std, l_std, t_std, device):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func):
         super(BackwardLSTM, self).__init__()
 
         # Ensure hidden_units and num_layers are lists
@@ -416,7 +415,7 @@ class BackwardLSTM(nn.Module):
                                               batch_first=True)
         self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1])
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len)
-        self.clamp = Clamp(x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std, device)
+        # self.clamp = Clamp(x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std, device)
 
     def forward(self, x):
         '''

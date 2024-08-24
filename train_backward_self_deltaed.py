@@ -16,8 +16,8 @@ import time
 import shutil
 
 from data import create_dataset_delta
-from models import ForwardVectorAttentionLSTM
-from train import train_epochs_forward
+from models import BackwardLSTM, RangeLoss
+from train import train_epochs_backward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA, ACTIVATE_FUNC
 
@@ -39,8 +39,8 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240824_relu'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'vector_attention/deltaed')
+    timestamp = '20240824_leakyrelu'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards', 'self_attention/deltaed')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -52,12 +52,15 @@ if __name__ == '__main__':
     shutil.copyfile('parameters.py', os.path.join(RESULTS_PATH, timestamp, 'parameters.py'))
     shutil.copyfile('train.py', os.path.join(RESULTS_PATH, timestamp, 'train.py'))
     shutil.copyfile('models.py', os.path.join(RESULTS_PATH, timestamp, 'models.py'))
-    shutil.copyfile('train_forward_vector_deltaed.py',
-                    os.path.join(RESULTS_PATH, timestamp, 'train_forward_vector_deltaed.py'))
+    shutil.copyfile('train_backward_self_deltaed.py',
+                    os.path.join(RESULTS_PATH, timestamp, 'train_backward_self_deltaed.py'))
     shutil.copyfile('data.py', os.path.join(RESULTS_PATH, timestamp, 'data.py'))
     if os.path.exists(os.path.join(RESULTS_PATH, timestamp, 'data')):
         shutil.rmtree(os.path.join(RESULTS_PATH, timestamp, 'data'))
     shutil.copytree('data', os.path.join(RESULTS_PATH, timestamp, 'data'))
+    self_model_name = 'Forward_mse_vloss_best_attn_0.pth'
+    shutil.copyfile(os.path.join('results/compare/deltaed/', self_model_name),
+                    os.path.join(model_save_path, 'self_attention_deltaed_forward.pth'))
 
     # Set seed
     time_now = int(time.strftime("%Y%m%d%H%M%S", time.localtime()))
@@ -73,17 +76,6 @@ if __name__ == '__main__':
                                   num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
     test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False,
                                  num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
-    '''
-    print('{}: Using dataset:'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
-    print()
-    print('Train:')
-    train_dataset.print()
-    train_dataset.print_item(0)
-    print()
-    print('Test:')
-    test_dataset.print()
-    test_dataset.print_item(0)
-    '''
 
     print('{}: Complete initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     print()
@@ -92,12 +84,16 @@ if __name__ == '__main__':
     input_len = train_dataset.max_src_seq_len
     out_len = train_dataset.max_tgt_seq_len
     # Forward
-    print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward')
-    forward_model = ForwardVectorAttentionLSTM(input_len=input_len, hidden_units=HIDDEN_UNITS,
-                                             out_len=out_len, num_layers=NUM_LAYERS,
-                                             activate_func=ACTIVATE_FUNC).to(device)
+    print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Backward')
+    l_mean = train_dataset.l_mean
+    t_mean = train_dataset.t_mean
+    l_std = train_dataset.l_std
+    t_std = train_dataset.t_std
+    backward_model_self = BackwardLSTM(input_len=out_len, hidden_units=HIDDEN_UNITS, out_len=input_len,
+                                       num_layers=NUM_LAYERS, activate_func=ACTIVATE_FUNC).to(device)
 
-    for p in forward_model.parameters():
+
+    for p in backward_model_self.parameters():
         if p.dim() > 1:
             nn.init.xavier_uniform_(p)
 
@@ -106,46 +102,51 @@ if __name__ == '__main__':
     # See https://andyljones.tumblr.com/post/110998971763/an-explanation-of-xavier-initialization for a mathematical
     # explanation.
 
-    forward_loss_fn_MSE = MSELoss(reduction='mean').to(device)
-    forward_optimizer_Adam = Adam(params=forward_model.parameters(), lr=LEARNING_RATE)
+    backward_loss_fn_MSE = MSELoss(reduction='mean').to(device)
+    backward_optimizer_Adam_self = Adam(params=backward_model_self.parameters(), lr=LEARNING_RATE)
 
     # See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html
-    forward_step_lr = StepLR(optimizer=forward_optimizer_Adam, step_size=STEP_SIZE, gamma=GAMMA)
+    backward_step_lr_self = StepLR(optimizer=backward_optimizer_Adam_self, step_size=STEP_SIZE, gamma=GAMMA)
+
+    # Load forward models
+    forward_model_self = torch.load(os.path.join(model_save_path, 'self_attention_deltaed_forward.pth'))
+    forward_model_self = forward_model_self.to(device)
 
     # Train
-    forward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
-        training_loader=train_dataloader, test_loader=test_dataloader, model=forward_model,
-        loss_fn=forward_loss_fn_MSE, optimizer=forward_optimizer_Adam, scheduler=forward_step_lr,
-        attention=0, timestamp=timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=device)
+    backward_model_self, x_axis_loss_self, x_axis_vloss_self, loss_record_self, vloss_record_self = train_epochs_backward(
+        training_loader=train_dataloader, test_loader=test_dataloader, forward_model=forward_model_self,
+        backward_model=backward_model_self, loss_fn=backward_loss_fn_MSE, optimizer=backward_optimizer_Adam_self,
+        scheduler=backward_step_lr_self, timestamp=timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=device)
 
     # Save model
-    model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
+    model_name = f'Backward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}_self.pth'
     if os.path.exists(os.path.join(model_save_path, model_name)):
         os.remove(os.path.join(model_save_path, model_name))
-    torch.save(forward_model, os.path.join(model_save_path, model_name))
+    torch.save(backward_model_self, os.path.join(model_save_path, model_name))
 
     # Draw loss figure
     plt.figure()
-    figs_name = 'loss_forward.png'
+    figs_name = 'loss_backward_self.png'
     # plt.axes(yscale="log")
-    plt1, = plt.plot(x_axis_loss, loss_record, label='loss')
-    plt2, = plt.plot(x_axis_vloss, vloss_record, label='vloss')
+    plt1, = plt.plot(x_axis_loss_self, loss_record_self, label='loss')
+    plt2, = plt.plot(x_axis_vloss_self, vloss_record_self, label='vloss')
     plt.legend()
     plt.xlabel('epoch')
     plt.ylabel('Loss')
-    plt.title('Loss to epochs, forward')
+    plt.title('Loss to epochs, backward')
     if os.path.exists(os.path.join(figs_save_path, figs_name)):
         os.remove(os.path.join(figs_save_path, figs_name))
     plt.savefig(os.path.join(figs_save_path, figs_name))
-    # plt.show()
+    plt.show()
     plt.close()
 
-    loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
-                 'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS,'LEARNING_RATE': LEARNING_RATE,
-                 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA, 'time_used': start_time-time.time()}
+    loss_save = {'loss_record_self': loss_record_self, 'vloss_record_self': vloss_record_self,
+                 'seed': time_now, 'EPOCHS': EPOCHS, 'BATCH_SIZE': BATCH_SIZE,
+                 'NUM_LAYERS': NUM_LAYERS, 'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE,
+                 'GAMMA': GAMMA}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss.mat'), mdict=loss_save)
 
     end_time = time.time()
     print()
     print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
-                                           time.strftime('%d Days %H h %M m %S s ', time.gmtime(end_time - start_time))))
+                                           time.strftime('%d days %H h %M m %S s ', time.gmtime(end_time - start_time))))
