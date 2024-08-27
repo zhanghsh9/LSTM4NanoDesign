@@ -28,14 +28,14 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240812_tanh'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
+    timestamp = '20240827_leakyrelu'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention', 'CD')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
     # Create dataloader
     transform = transforms.Compose([transforms.ToTensor()])
-    _, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=transform,
+    _, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL_TR', transform=transform,
                                      sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, drop_last=True,
                                  pin_memory=True)

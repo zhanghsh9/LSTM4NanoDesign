@@ -16,7 +16,7 @@ import time
 import shutil
 
 from data import create_dataset
-from models import ForwardSelfAttentionLSTM, CDLoss
+from models import ForwardSelfCDLSTM, CDLoss
 from train import train_epochs_forward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA, ACTIVATE_FUNC
@@ -33,13 +33,13 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:3')
+        device = torch.device('cuda:2')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240829_tanh'
+    timestamp = '20240826_tanh'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention', 'CD')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     shutil.copyfile('train.py', os.path.join(RESULTS_PATH, timestamp, 'train.py'))
     shutil.copyfile('models.py', os.path.join(RESULTS_PATH, timestamp, 'models.py'))
     shutil.copyfile('train_forward_self_attention.py',
-                    os.path.join(RESULTS_PATH, timestamp, 'train_forward_self_attention.py'))
+                    os.path.join(RESULTS_PATH, timestamp, 'train_forward_self_CD.py'))
     shutil.copyfile('data.py', os.path.join(RESULTS_PATH, timestamp, 'data.py'))
     if os.path.exists(os.path.join(RESULTS_PATH, timestamp, 'data')):
         shutil.rmtree(os.path.join(RESULTS_PATH, timestamp, 'data'))
@@ -66,9 +66,8 @@ if __name__ == '__main__':
     # Create dataset
     print('{}: Initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL_TR',
-                                                 transform=transform, sample_rate=SAMPLE_RATE, make_spectrum_int=False,
-                                                 device=device)
+    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL_TR', transform=transform,
+                                                 sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
     train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,
                                   num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
     test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False,
@@ -93,8 +92,8 @@ if __name__ == '__main__':
     out_len = train_dataset.max_tgt_seq_len
     # Forward
     print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward')
-    forward_model = ForwardSelfAttentionLSTM(input_len=input_len, hidden_units=HIDDEN_UNITS, out_len=out_len,
-                                             num_layers=NUM_LAYERS, activate_func=ACTIVATE_FUNC).to(device)
+    forward_model = ForwardSelfCDLSTM(input_len=input_len, hidden_units=HIDDEN_UNITS, out_len=out_len,
+                                      num_layers=NUM_LAYERS, activate_func=ACTIVATE_FUNC).to(device)
 
     for p in forward_model.parameters():
         if p.dim() > 1:
@@ -106,7 +105,7 @@ if __name__ == '__main__':
     # explanation.
 
     forward_loss_fn_MSE = MSELoss(reduction='mean').to(device)
-    forward_loss_fn = CDLoss(loss_fn=forward_loss_fn_MSE, CD_loss_ratio=10)
+    forward_loss_fn=CDLoss(loss_fn=forward_loss_fn_MSE, CD_loss_ratio=10)
     forward_optimizer_Adam = Adam(params=forward_model.parameters(), lr=LEARNING_RATE)
 
     # See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html
@@ -115,7 +114,7 @@ if __name__ == '__main__':
     # Train
     forward_model, x_axis_loss, x_axis_vloss, loss_record, vloss_record = train_epochs_forward(
         training_loader=train_dataloader, test_loader=test_dataloader, model=forward_model,
-        loss_fn=forward_loss_fn, optimizer=forward_optimizer_Adam, scheduler=forward_step_lr,
+        loss_fn=forward_loss_fn_MSE, optimizer=forward_optimizer_Adam, scheduler=forward_step_lr,
         attention=0, timestamp=timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=device)
 
     # Save model
@@ -141,8 +140,9 @@ if __name__ == '__main__':
     plt.close()
 
     loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
-                 'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'LEARNING_RATE': LEARNING_RATE,
-                 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA, 'x_axis_loss': x_axis_loss, 'x_axis_vloss': x_axis_vloss}
+                 'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS,
+                 'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA, 'x_axis_loss': x_axis_loss,
+                 'x_axis_vloss': x_axis_vloss}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss.mat'), mdict=loss_save)
 
     end_time = time.time()

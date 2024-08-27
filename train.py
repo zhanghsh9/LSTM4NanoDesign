@@ -145,8 +145,6 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
                 torch.save(model, os.path.join(model_save_path, model_name))
                 best_vloss = avg_vloss
 
-            vloss_record.append(float(avg_vloss))
-            x_axis_vloss.append(epoch + 1)
         else:
             print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Training Loss:{avg_loss}, best vloss: {best_vloss}')
 
@@ -317,8 +315,6 @@ def train_epochs_backward(training_loader, test_loader, forward_model, backward_
                 torch.save(backward_model, os.path.join(model_save_path, model_name))
                 best_vloss = avg_vloss
 
-            vloss_record.append(float(avg_vloss))
-            x_axis_vloss.append(epoch + 1)
         else:
             print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Training Loss:{avg_loss}, best vloss: {best_vloss}')
 

@@ -62,7 +62,7 @@ def entire_normalize(data):
     return normalized_data, data_mean, data_var
 
 
-def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
+def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR="TL_TR", transform=None,
                    sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=torch.device('cuda')):
     """
     Create dataset
@@ -123,7 +123,7 @@ def create_dataset_delta(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transfo
 
 
 class GoldNanorodSingle(Dataset):
-    def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
+    def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL_TR='TL_TR', transform=None,
                  sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=torch.device('cuda')):
         data = scio.loadmat(data_path)
 
@@ -221,10 +221,13 @@ class GoldNanorodSingle(Dataset):
             TL = data['TL_int']
             TR = data['TR_int']
             TL_TR = data['TL_TR_int']
+            CD = TL - TR
         else:
             TL = data['TL_float']
             TR = data['TR_float']
             TL_TR = data['TL_TR_float']
+
+            CD = 10*(TL - TR)
 
             '''
             for i in range(len(data['TL'])):
@@ -237,10 +240,16 @@ class GoldNanorodSingle(Dataset):
                     TL_TR[i][j] = data['TL_TR'][i][j] / 1000.
             '''
 
-        if self.use_TL_TR:
+        if self.use_TL_TR == 'TL_TR':
             self.spectra = [list(l[::sample_rate]) for l in TL_TR]
-        else:
+        elif self.use_TL_TR == 'TL':
             self.spectra = [list(l[::sample_rate]) for l in TL]
+        elif self.use_TL_TR == 'TR':
+            self.spectra = [list(l[::sample_rate]) for l in TR]
+        elif self.use_TL_TR == 'CD':
+            self.spectra = [list(l[::sample_rate]) for l in CD]
+        else:
+            raise 'Error spectrum type!'
         # self.norm_normal00 = norm_normal00
 
         # Get seq len
@@ -278,7 +287,7 @@ class GoldNanorodSingle(Dataset):
 
 
 class GoldNanorodDelta(Dataset):
-    def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
+    def __init__(self, data_path=DATA_PATH, rods=RODS, use_TL_TR='TL_TR', transform=None,
                  sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=torch.device('cuda')):
         data = scio.loadmat(data_path)
 
@@ -314,10 +323,16 @@ class GoldNanorodDelta(Dataset):
             TR = data['TR_float']
             TL_TR = data['TL_TR_float']
 
-        if self.use_TL_TR:
+        if self.use_TL_TR == 'TL_TR':
             self.spectra = [list(l[::sample_rate]) for l in TL_TR]
-        else:
+        elif self.use_TL_TR == 'TL':
             self.spectra = [list(l[::sample_rate]) for l in TL]
+        elif self.use_TL_TR == 'TR':
+            self.spectra = [list(l[::sample_rate]) for l in TR]
+        elif self.use_TL_TR == 'CD':
+            self.spectra = [list(l[::sample_rate]) for l in CD]
+        else:
+            raise 'Error spectrum type!'
 
         # Get seq len
         self.src_len = torch.Tensor([len(l) for l in self.norm_normal00]).to(torch.int32)
