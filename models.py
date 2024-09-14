@@ -448,6 +448,35 @@ class ForwardSelfAttentionDNN(nn.Module):
         return out, self.hidden
 
 
+
+class ForwardNoAttentionDNN(nn.Module):
+    def __init__(self, input_len, hidden_units, out_len, activate_func):
+        super(ForwardNoAttentionDNN, self).__init__()
+
+        # Ensure hidden_units and num_layers are lists
+        assert isinstance(hidden_units, list), "hidden_units must be a list"
+
+        # Parameters
+        self.input_len = input_len
+        self.hidden_size = hidden_units
+        self.hidden = None
+        self.out_len = out_len
+        self.activate_func = activate_func
+
+        # Layers
+        self.dnns = MultiLayerDNN(input_len=self.input_len, hidden_units=self.hidden_size,
+                                  activate_func=self.activate_func, batch_first=True)
+        self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
+        self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
+
+    def forward(self, x):
+        modified_x = self.dnns(x)
+        # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
+        out = self.fc1(modified_x)
+        out = torch.sigmoid(out)
+        return out, self.hidden
+
+
 # Clamp the output within a reasonable range
 class Clamp(nn.Module):
     def __init__(self, x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std, device):

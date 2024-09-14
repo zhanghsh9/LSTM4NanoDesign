@@ -16,7 +16,7 @@ import time
 import shutil
 
 from data import create_dataset
-from models import ForwardSelfAttentionDNN
+from models import ForwardNoAttentionDNN
 from train import train_epochs_forward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA, ACTIVATE_FUNC
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
     timestamp = '20240914_tanh'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention_dnn')
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'no_attention_dnn')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -52,8 +52,8 @@ if __name__ == '__main__':
     shutil.copyfile('parameters.py', os.path.join(RESULTS_PATH, timestamp, 'parameters.py'))
     shutil.copyfile('train.py', os.path.join(RESULTS_PATH, timestamp, 'train.py'))
     shutil.copyfile('models.py', os.path.join(RESULTS_PATH, timestamp, 'models.py'))
-    shutil.copyfile('train_forward_self_dnn.py',
-                    os.path.join(RESULTS_PATH, timestamp, 'train_forward_self_dnn.py'))
+    shutil.copyfile('train_forward_no_dnn.py',
+                    os.path.join(RESULTS_PATH, timestamp, 'train_forward_no_dnn.py'))
     shutil.copyfile('data.py', os.path.join(RESULTS_PATH, timestamp, 'data.py'))
     if os.path.exists(os.path.join(RESULTS_PATH, timestamp, 'data')):
         shutil.rmtree(os.path.join(RESULTS_PATH, timestamp, 'data'))
@@ -93,8 +93,8 @@ if __name__ == '__main__':
     out_len = train_dataset.max_tgt_seq_len
     # Forward
     print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Forward')
-    forward_model = ForwardSelfAttentionDNN(input_len=input_len, hidden_units=HIDDEN_UNITS, out_len=out_len,
-                                            activate_func=ACTIVATE_FUNC).to(device)
+    forward_model = ForwardNoAttentionDNN(input_len=input_len, hidden_units=HIDDEN_UNITS, out_len=out_len,
+                                          activate_func=ACTIVATE_FUNC).to(device)
 
     for p in forward_model.parameters():
         if p.dim() > 1:
