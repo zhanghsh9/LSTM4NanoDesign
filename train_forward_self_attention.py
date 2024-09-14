@@ -39,8 +39,8 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240829_tanh'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention', 'CD')
+    timestamp = '20240914_tanh'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # Create dataset
     print('{}: Initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL_TR',
+    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL',
                                                  transform=transform, sample_rate=SAMPLE_RATE, make_spectrum_int=False,
                                                  device=device)
     train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,
@@ -105,8 +105,7 @@ if __name__ == '__main__':
     # See https://andyljones.tumblr.com/post/110998971763/an-explanation-of-xavier-initialization for a mathematical
     # explanation.
 
-    forward_loss_fn_MSE = MSELoss(reduction='mean').to(device)
-    forward_loss_fn = CDLoss(loss_fn=forward_loss_fn_MSE, CD_loss_ratio=10)
+    forward_loss_fn = MSELoss(reduction='mean').to(device)
     forward_optimizer_Adam = Adam(params=forward_model.parameters(), lr=LEARNING_RATE)
 
     # See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html
@@ -142,11 +141,11 @@ if __name__ == '__main__':
 
     loss_save = {'loss_record': loss_record, 'vloss_record': vloss_record, 'seed': time_now, 'EPOCHS': EPOCHS,
                  'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'LEARNING_RATE': LEARNING_RATE,
-                 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA, 'x_axis_loss': x_axis_loss, 'x_axis_vloss': x_axis_vloss}
+                 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA, 'x_axis_loss': x_axis_loss, 'x_axis_vloss': x_axis_vloss,
+                 'time_used': start_time - time.time()}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss.mat'), mdict=loss_save)
 
     end_time = time.time()
     print()
     print('{}: Total time used: {}'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime()),
                                            time.strftime('%H h %M m %S s ', time.gmtime(end_time - start_time))))
-

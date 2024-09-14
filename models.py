@@ -40,6 +40,30 @@ class EncoderDecoder(nn.Module):
         return modified_x
 
 
+
+class MultiLayerDNN(nn.Module):
+    def __init__(self, input_len, hidden_units, activate_func, batch_first=True):
+        # Ensure hidden_units and num_layers are lists
+        assert isinstance(hidden_units, list), "hidden_units must be a list"
+
+        super(MultiLayerDNN, self).__init__()
+        self.input_len = input_len
+        self.hidden_size = hidden_units
+        self.batch_first = batch_first
+        self.activate_func = activate_func
+        self.encoder = nn.Linear(in_features=input_len, out_features=hidden_units[0], bias=True)
+        self.dnns = nn.ModuleList()
+        for i in range(1, len(hidden_units)):
+            self.dnns.append(
+                nn.Linear(in_features=hidden_units[i - 1], out_features=hidden_units[i], bias=True))
+
+    def forward(self, x):
+        modified_x = self.activate_func(self.encoder(x))
+        for i in range(len(self.hidden_size) - 1):
+            modified_x = self.activate_func(self.dnns[i](modified_x))
+        return modified_x
+
+
 class FixedAttention(nn.Module):
     def __init__(self, attention):
         super(FixedAttention, self).__init__()
@@ -393,6 +417,37 @@ class ForwardVectorAttentionLSTM(nn.Module):
         return out, self.hidden
 
 
+class ForwardSelfAttentionDNN(nn.Module):
+    def __init__(self, input_len, hidden_units, out_len, activate_func):
+        super(ForwardSelfAttentionDNN, self).__init__()
+
+        # Ensure hidden_units and num_layers are lists
+        assert isinstance(hidden_units, list), "hidden_units must be a list"
+
+        # Parameters
+        self.input_len = input_len
+        self.hidden_size = hidden_units
+        self.hidden = None
+        self.out_len = out_len
+        self.activate_func = activate_func
+
+        # Layers
+        self.self_attention = nn.Linear(in_features=self.input_len, out_features=self.input_len,
+                                        bias=False)  # Self attention layer
+        self.dnns = MultiLayerDNN(input_len=self.input_len, hidden_units=self.hidden_size,
+                                  activate_func=self.activate_func, batch_first=True)
+        self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
+        self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
+
+    def forward(self, x):
+        attentioned_x = self.self_attention(x)
+        modified_x = self.dnns(attentioned_x)
+        # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
+        out = self.fc1(modified_x)
+        out = torch.sigmoid(out)
+        return out, self.hidden
+
+
 # Clamp the output within a reasonable range
 class Clamp(nn.Module):
     def __init__(self, x_mean, y_mean, z_mean, l_mean, t_mean, x_std, y_std, z_std, l_std, t_std, device):
@@ -507,8 +562,8 @@ class CDLoss(nn.Module):
 
     def forward(self, output, target):
         TL_TR_loss = self.loss_fn(output, target)
-        CD_loss = self.CD_loss_ratio * self.loss_fn(output[:, 0:301] - output[:, 301:],
-                                                    target[:, 0:301] - target[:, 301:])
+        CD_loss = self.CD_loss_ratio * self.loss_fn(torch.abs(output[:, 0:301] - output[:, 301:]),
+                                                    torch.abs(target[:, 0:301] - target[:, 301:]))
 
         total_loss = TL_TR_loss + CD_loss
         return total_loss
