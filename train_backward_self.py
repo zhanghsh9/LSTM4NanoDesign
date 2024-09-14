@@ -16,7 +16,7 @@ import time
 import shutil
 
 from data import create_dataset
-from models import BackwardLSTM, RangeLoss
+from models import BackwardLSTM
 from train import train_epochs_backward
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
     LEARNING_RATE, EPOCHS, NUM_LAYERS, HIDDEN_UNITS, STEP_SIZE, GAMMA, ACTIVATE_FUNC
@@ -33,13 +33,13 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:0')
+        device = torch.device('cuda:2')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240726_leakyrelu'
+    timestamp = '20240914_leakyrelu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'backwards', 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
@@ -52,8 +52,8 @@ if __name__ == '__main__':
     shutil.copyfile('parameters.py', os.path.join(RESULTS_PATH, timestamp, 'parameters.py'))
     shutil.copyfile('train.py', os.path.join(RESULTS_PATH, timestamp, 'train.py'))
     shutil.copyfile('models.py', os.path.join(RESULTS_PATH, timestamp, 'models.py'))
-    shutil.copyfile('train_forward_self_attention.py',
-                    os.path.join(RESULTS_PATH, timestamp, 'train_forward_self_attention.py'))
+    shutil.copyfile('train_backward_self.py',
+                    os.path.join(RESULTS_PATH, timestamp, 'train_backward_self.py'))
     shutil.copyfile('data.py', os.path.join(RESULTS_PATH, timestamp, 'data.py'))
     if os.path.exists(os.path.join(RESULTS_PATH, timestamp, 'data')):
         shutil.rmtree(os.path.join(RESULTS_PATH, timestamp, 'data'))
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     # Create dataset
     print('{}: Initializing dataset'.format(time.strftime("%Y%m%d  %H:%M:%S", time.localtime())))
     transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=transform,
+    train_dataset, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL_TR', transform=transform,
                                                  sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
     train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,
                                   num_workers=NUM_WORKERS, drop_last=True, pin_memory=True)
@@ -95,9 +95,7 @@ if __name__ == '__main__':
     l_std = train_dataset.l_std
     t_std = train_dataset.t_std
     backward_model_self = BackwardLSTM(input_len=out_len, hidden_units=HIDDEN_UNITS, out_len=input_len,
-                                       num_layers=NUM_LAYERS, activate_func=ACTIVATE_FUNC, x_mean=x_mean, y_mean=y_mean,
-                                       z_mean=z_mean, l_mean=l_mean, t_mean=t_mean, x_std=x_std, y_std=y_std,
-                                       z_std=z_std, l_std=l_std, t_std=t_std, device=device).to(device)
+                                       num_layers=NUM_LAYERS, activate_func=ACTIVATE_FUNC).to(device)
 
 
     for p in backward_model_self.parameters():
@@ -110,15 +108,6 @@ if __name__ == '__main__':
     # explanation.
 
     backward_loss_fn_MSE = MSELoss(reduction='mean').to(device)
-    ranges = [
-        (-2.021, 2.0113),
-        (-2.0488, 2.0655),
-        (-1.7734, 1.7538),
-        (-1.4848, 2.3212),
-        (-0.7424, 1.1247),
-        (-1.6584, 1.6643)
-    ]*(int(input_len/6))
-    #backward_loss_fn_MSE = RangeLoss(ranges=ranges).to(device)
     backward_optimizer_Adam_self = Adam(params=backward_model_self.parameters(), lr=LEARNING_RATE)
 
     # See https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.StepLR.html
@@ -156,10 +145,10 @@ if __name__ == '__main__':
     plt.show()
     plt.close()
 
-    loss_save = {'loss_record_self': loss_record_self, 'vloss_record_self': vloss_record_self,
-                 'seed': time_now, 'EPOCHS': EPOCHS, 'BATCH_SIZE': BATCH_SIZE,
-                 'NUM_LAYERS': NUM_LAYERS, 'LEARNING_RATE': LEARNING_RATE, 'STEP_SIZE': STEP_SIZE,
-                 'GAMMA': GAMMA}
+    loss_save = {'loss_record_self': loss_record_self, 'vloss_record_self': vloss_record_self, 'seed': time_now,
+                 'EPOCHS': EPOCHS, 'BATCH_SIZE': BATCH_SIZE, 'NUM_LAYERS': NUM_LAYERS, 'LEARNING_RATE': LEARNING_RATE,
+                 'STEP_SIZE': STEP_SIZE, 'GAMMA': GAMMA, 'x_axis_loss': x_axis_loss_self,
+                 'x_axis_vloss': x_axis_vloss_self, 'time_used': start_time - time.time()}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'loss.mat'), mdict=loss_save)
 
     end_time = time.time()
