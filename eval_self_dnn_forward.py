@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # dir
     timestamp = '20240914_tanh'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention_dnn')
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'no_attention_dnn')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
