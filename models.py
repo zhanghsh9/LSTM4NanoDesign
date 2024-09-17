@@ -417,6 +417,39 @@ class ForwardVectorAttentionLSTM(nn.Module):
         return out, self.hidden
 
 
+
+class ForwardNoAttentionLSTM(nn.Module):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func):
+        super(ForwardNoAttentionLSTM, self).__init__()
+
+        # Ensure hidden_units and num_layers are lists
+        assert isinstance(hidden_units, list), "hidden_units must be a list"
+        assert isinstance(num_layers, list), "num_layers must be a list"
+        assert len(hidden_units) == len(num_layers), "hidden_units and num_layers must have the same length"
+
+        # Parameters
+        self.input_len = input_len
+        self.hidden_size = hidden_units
+        self.num_layers = num_layers
+        self.hidden = None
+        self.out_len = out_len
+        self.activate_func = activate_func
+
+        # Layers
+        self.encoder_decoder = EncoderDecoder(input_len=self.input_len, hidden_units=self.hidden_size,
+                                              num_layers=self.num_layers, activate_func=self.activate_func,
+                                              batch_first=True)
+        self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
+        self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
+
+    def forward(self, x):
+        modified_x = self.encoder_decoder(x)
+        # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
+        out = self.fc1(modified_x)
+        out = torch.sigmoid(out)
+        return out, self.hidden
+
+
 class ForwardSelfAttentionDNN(nn.Module):
     def __init__(self, input_len, hidden_units, out_len, activate_func):
         super(ForwardSelfAttentionDNN, self).__init__()
