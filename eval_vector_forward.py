@@ -28,15 +28,16 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240916_tanh2'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'vector_attention_dnn')
+    timestamp = '20240916_tanh'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'vector_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
     # Create dataloader
     transform = transforms.Compose([transforms.ToTensor()])
-    _, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL', transform=transform,
-                                     sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
+    _, test_dataset = create_dataset(data_path=os.path.join(RESULTS_PATH, timestamp, 'data'), rods=RODS,
+                                     use_TL_TR='TL_TR', transform=transform, sample_rate=SAMPLE_RATE,
+                                     make_spectrum_int=False, device=device)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, drop_last=True,
                                  pin_memory=True)
     # Forward prediction
@@ -133,5 +134,8 @@ if __name__ == '__main__':
         forward_mae_loss_sum = forward_mae_loss_sum / (i + 1)
         print(f'Forward MSE = {forward_mse_loss_sum}, MAE = {forward_mae_loss_sum}')
 
-    results_save = {'real': real, 'prediction': prediction,  'mse': forward_mse_loss_sum, 'mae': forward_mae_loss_sum}
+    # print(forward_model.self_attention.weight)
+    attn_matrix = forward_model.vector_attention.attention_vector.to('cpu')
+    results_save = {'attn_matrix': attn_matrix.tolist(), 'real': real, 'prediction': prediction,
+                    'mse': forward_mse_loss_sum, 'mae': forward_mae_loss_sum}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
