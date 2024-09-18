@@ -318,18 +318,15 @@ class ForwardSelfAttentionKQVLSTM(nn.Module):
 
 
 class ForwardMultiheadAttentionLSTM(nn.Module):
-    def __init__(self, input_len, hidden_units, out_len, num_layers, num_heads=1):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func, num_heads=1):
         super(ForwardMultiheadAttentionLSTM, self).__init__()
 
         # Ensure hidden_units and num_layers are lists
         assert isinstance(hidden_units, list), "hidden_units must be a list"
-        assert isinstance(num_layers, list), "num_layers must be a list"
-        assert len(hidden_units) == len(num_layers), "hidden_units and num_layers must have the same length"
 
         # Parameters
         self.input_len = input_len
         self.hidden_size = hidden_units
-        self.num_layers = num_layers
         self.hidden = None
         # self.num_lstms = num_lstms
         self.out_len = out_len
@@ -337,36 +334,23 @@ class ForwardMultiheadAttentionLSTM(nn.Module):
         self.query = None
         self.key = None
         self.value = None
+        self.activate_func = activate_func
+        self.num_layers=num_layers
 
         # Layers
         self.multihead_attention = nn.MultiheadAttention(embed_dim=self.input_len,
                                                          num_heads=self.num_heads, batch_first=True)
-        self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units[0], num_layers=num_layers[0],
-                               batch_first=True)
-        self.lstms = nn.ModuleList()
-        for i in range(1, len(hidden_units)):
-            self.lstms.append(
-                nn.LSTM(input_size=hidden_units[i - 1], hidden_size=hidden_units[i], num_layers=num_layers[i],
-                        batch_first=True))
-        # self.lstms = get_clones(
-        #    nn.LSTM(input_size=hidden_units, hidden_size=hidden_units, num_layers=num_layers, batch_first=True),
-        #    num_lstms)
-        # self.multihead_attention = nn.MultiheadAttention(embed_dim=self.hidden_size[-1],
-        #                                                  num_heads=self.num_heads, batch_first=True)
+        self.encoder_decoder = EncoderDecoder(input_len=self.input_len, hidden_units=self.hidden_size,
+                                              num_layers=self.num_layers, activate_func=self.activate_func,
+                                              batch_first=True)
         self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
 
     def forward(self, x):
         attentioned_x, _ = self.multihead_attention(x, x, x)
-        modified_x = F.relu(self.encoder(attentioned_x)[0])
-        for i in range(len(self.hidden_size) - 1):
-            modified_x = F.relu(self.lstms[i](modified_x)[0])
+        modified_x = self.encoder_decoder(attentioned_x)
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
-        # attentioned_x, _ = self.multihead_attention(modified_x, modified_x, modified_x)
-        # attentioned_x shape: (batch_size, seq_length, hidden_dim)
-        # Selecting the output corresponding to the last sequence element
         out = self.fc1(modified_x)
-        # out = self.fc1(modified_x)
         out = torch.sigmoid(out)
         return out, self.hidden
 
@@ -533,6 +517,43 @@ class ForwardVectorAttentionDNN(nn.Module):
 
     def forward(self, x):
         attentioned_x = self.vector_attention(x)
+        modified_x = self.dnns(attentioned_x)
+        # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
+        out = self.fc1(modified_x)
+        out = torch.sigmoid(out)
+        return out, self.hidden
+
+
+
+class ForwardMultiheadAttentionDNN(nn.Module):
+    def __init__(self, input_len, hidden_units, out_len, activate_func, num_heads=1):
+        super(ForwardMultiheadAttentionDNN, self).__init__()
+
+        # Ensure hidden_units and num_layers are lists
+        assert isinstance(hidden_units, list), "hidden_units must be a list"
+
+        # Parameters
+        self.input_len = input_len
+        self.hidden_size = hidden_units
+        self.hidden = None
+        # self.num_lstms = num_lstms
+        self.out_len = out_len
+        self.num_heads = num_heads
+        self.query = None
+        self.key = None
+        self.value = None
+        self.activate_func=activate_func
+
+        # Layers
+        self.multihead_attention = nn.MultiheadAttention(embed_dim=self.input_len,
+                                                         num_heads=self.num_heads, batch_first=True)
+        self.dnns = MultiLayerDNN(input_len=self.input_len, hidden_units=self.hidden_size,
+                                  activate_func=self.activate_func, batch_first=True)
+        self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
+        self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
+
+    def forward(self, x):
+        attentioned_x, _ = self.multihead_attention(x, x, x)
         modified_x = self.dnns(attentioned_x)
         # modified_x = F.relu(modified_x + self.feedforward(modified_x))  # residual
         out = self.fc1(modified_x)
