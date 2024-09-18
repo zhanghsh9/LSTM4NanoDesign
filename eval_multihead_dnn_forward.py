@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # dir
     timestamp = '20240917_tanh'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'multihead')
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'multihead_attention_dnn')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
