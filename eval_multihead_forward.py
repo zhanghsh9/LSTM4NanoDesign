@@ -28,7 +28,7 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240917_tanh'
+    timestamp = '20240929_relu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'multihead')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
