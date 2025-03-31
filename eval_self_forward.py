@@ -20,7 +20,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:2')
+        device = torch.device('cuda:3')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -57,12 +57,17 @@ if __name__ == '__main__':
     prediction = []
     real = []
     vloss_best = 100
+    total_time = 0  # Initialize total time for inference
 
     with torch.no_grad():
         for i, data in enumerate(test_dataloader):
+            start_time = time.time()  # Start time before prediction
             vinputs, vlabels = data
             vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
             voutput, _ = forward_model(vinputs)
+            end_time = time.time()  # End time after prediction
+            inference_time = end_time - start_time
+            total_time += inference_time  # Accumulate total time
             mse_loss = forward_loss_fn(vlabels, voutput).item()
             mae_loss = forward_loss_fn_MAE(vlabels, voutput).item()
             forward_mse_loss_sum = forward_mse_loss_sum + mse_loss
@@ -129,9 +134,12 @@ if __name__ == '__main__':
                 plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'), dpi=900)
                 plt.close()
             '''
+
         forward_mse_loss_sum = forward_mse_loss_sum / (i + 1)
         forward_mae_loss_sum = forward_mae_loss_sum / (i + 1)
         print(f'Forward MSE = {forward_mse_loss_sum}, MAE = {forward_mae_loss_sum}')
 
-    results_save = {'real': real, 'prediction': prediction,  'mse': forward_mse_loss_sum, 'mae': forward_mae_loss_sum}
-    scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
+    # results_save = {'real': real, 'prediction': prediction,  'mse': forward_mse_loss_sum, 'mae': forward_mae_loss_sum}
+    # scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
+    avg_time_per_batch = total_time / len(test_dataloader)  # Calculate average time
+    print(avg_time_per_batch)

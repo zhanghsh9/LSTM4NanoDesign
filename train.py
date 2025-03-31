@@ -59,7 +59,7 @@ def train_one_epoch_forward(training_loader, optimizer, model, loss_fn=nn.MSELos
     return epoch_loss / (i + 1)
 
 
-def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer, scheduler,
+def train_epochs_forward(training_loader, valid_loader, model, loss_fn, optimizer, scheduler,
                          attention, timestamp, epochs=EPOCHS, start_epoch=0, results_path=RESULTS_PATH,
                          device=torch.device('cuda')):
     """
@@ -71,7 +71,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
     :param attention: double
     :param scheduler: torch.optim.lr_scheduler.StepLR
     :param epochs: int
-    :param test_loader: torch.utils.data.DataLoader
+    :param valid_loader: torch.utils.data.DataLoader
     :param training_loader: torch.utils.data.DataLoader
     :param model: torch.nn.Module
     :param loss_fn: torch.nn.CrossEntropyLoss
@@ -120,7 +120,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
             # Evaluation
             model.eval()
             running_vloss = 0.0
-            for i, vdata in enumerate(test_loader):
+            for i, vdata in enumerate(valid_loader):
                 vinputs, vlabels = vdata
                 vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
 
@@ -136,6 +136,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
 
             if epoch == start_epoch:
                 best_vloss = avg_vloss
+                best_vloss_epoch=epoch+1
 
             elif avg_vloss < best_vloss:
                 # Save model
@@ -144,6 +145,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
                     os.remove(os.path.join(model_save_path, model_name))
                 torch.save(model, os.path.join(model_save_path, model_name))
                 best_vloss = avg_vloss
+                best_vloss_epoch = epoch+1
 
         else:
             print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Training Loss:{avg_loss}, best vloss: {best_vloss}')
@@ -181,7 +183,7 @@ def train_epochs_forward(training_loader, test_loader, model, loss_fn, optimizer
         fig.canvas.flush_events()
     plt.close()
     '''
-    return model, x_axis_loss, x_axis_vloss, loss_record, vloss_record
+    return model, x_axis_loss, x_axis_vloss, loss_record, vloss_record, best_vloss_epoch
 
 
 def train_one_epoch_backward(training_loader, optimizer, backward_model, forward_model, loss_fn=nn.MSELoss(),

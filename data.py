@@ -8,7 +8,7 @@ import os
 from math import sqrt
 import time
 
-from parameters import DATA_PATH, RODS, SAMPLE_RATE
+from parameters import DATA_PATH, RODS, SAMPLE_RATE, DATA, TEST_SIZE
 
 
 def get_filename_delta(path, rods):
@@ -29,7 +29,7 @@ def get_filename_delta(path, rods):
     return train_filename, test_filename
 
 
-def get_filename(path, rods):
+def get_filename(path, rods, data):
     """
     Get training data filename, .mat
     :param path: str
@@ -39,12 +39,15 @@ def get_filename(path, rods):
 
     for root, dirs, files in os.walk(path):
         for name in files:
-            if name[5] == f'{rods}':
-                if name[12:-4] == 'test':
-                    test_filename = name
-                elif name[12:-4] == 'train':
-                    train_filename = name
-    return train_filename, test_filename
+            if f'{data}' in name and f'{TEST_SIZE}.' in name:
+                if f'_{rods}_' in name:
+                    if 'test' in name:
+                        test_filename = name
+                    elif 'train' in name:
+                        train_filename = name
+                    elif 'valid' in name:
+                        valid_filename = name
+    return train_filename, test_filename, valid_filename
 
 
 def entire_normalize(data):
@@ -62,7 +65,7 @@ def entire_normalize(data):
     return normalized_data, data_mean, data_var
 
 
-def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR="TL_TR", transform=None,
+def create_dataset(data_path=DATA_PATH, rods=RODS, data=DATA, use_TL_TR="TL_TR", transform=None,
                    sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=torch.device('cuda')):
     """
     Create dataset
@@ -76,10 +79,12 @@ def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR="TL_TR", transform=
     :return: dataset
     """
 
-    train_filename, test_filename = get_filename(data_path, rods)
+    train_filename, test_filename, valid_filename = get_filename(data_path, rods, data)
 
     train_data_path = os.path.join(DATA_PATH, train_filename)
     test_data_path = os.path.join(DATA_PATH, test_filename)
+    if valid_filename is not None:
+        valid_data_path = os.path.join(DATA_PATH, valid_filename)
     print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Using {train_data_path} as training data')
     print(f'{time.strftime("%Y%m%d  %H:%M:%S", time.localtime())}: Using {test_data_path} as test data')
     print()
@@ -88,8 +93,11 @@ def create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR="TL_TR", transform=
                                       sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
     test_dataset = GoldNanorodSingle(data_path=test_data_path, use_TL_TR=use_TL_TR, transform=transform,
                                      sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
+    if valid_filename is not None:
+        valid_dataset = GoldNanorodSingle(data_path=valid_data_path, use_TL_TR=use_TL_TR, transform=transform,
+                                     sample_rate=sample_rate, make_spectrum_int=make_spectrum_int, device=device)
 
-    return train_dataset, test_dataset
+    return train_dataset, test_dataset, valid_dataset
 
 
 def create_dataset_delta(data_path=DATA_PATH, rods=RODS, use_TL_TR=True, transform=None,
@@ -199,6 +207,7 @@ class GoldNanorodSingle(Dataset):
         '''
         norm_normal00 = data['norm_normal00']
         self.norm_normal00 = torch.Tensor(norm_normal00)
+        '''
         self.x_mean = data['x_mean']
         self.x_std = data['x_std']
         self.y_mean = data['y_mean']
@@ -210,6 +219,7 @@ class GoldNanorodSingle(Dataset):
         self.t_mean = data['t_mean']
         self.t_std = data['t_std']
         self.r = data['r']
+        '''
 
         '''
         TL = [[0 for j in range(len(data['TL'][i]))] for i in range(len(data['TL']))]

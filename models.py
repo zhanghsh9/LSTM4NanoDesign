@@ -7,13 +7,15 @@ import copy
 from datetime import datetime
 import time
 
+from parameters import DROPOUT
+
 
 def get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
 
 class EncoderDecoder(nn.Module):
-    def __init__(self, input_len, hidden_units, num_layers, activate_func, batch_first=True):
+    def __init__(self, input_len, hidden_units, num_layers, activate_func, dropout=DROPOUT, batch_first=True):
         # Ensure hidden_units and num_layers are lists
         assert isinstance(hidden_units, list), "hidden_units must be a list"
         assert isinstance(num_layers, list), "num_layers must be a list"
@@ -25,19 +27,27 @@ class EncoderDecoder(nn.Module):
         self.num_layers = num_layers
         self.batch_first = batch_first
         self.activate_func = activate_func
+        self.dropout=dropout
         self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units[0], num_layers=num_layers[0],
                                batch_first=True)
         self.lstms = nn.ModuleList()
         for i in range(1, len(hidden_units)):
             self.lstms.append(
                 nn.LSTM(input_size=hidden_units[i - 1], hidden_size=hidden_units[i], num_layers=num_layers[i],
-                        batch_first=True))
+                        batch_first=True, dropout=dropout))
 
     def forward(self, x):
-        modified_x = self.activate_func(self.encoder(x)[0])
-        for i in range(len(self.hidden_size) - 1):
-            modified_x = self.activate_func(self.lstms[i](modified_x)[0])
-        return modified_x
+        if self.activate_func is None:
+            modified_x = self.encoder(x)[0]
+            for i in range(len(self.hidden_size) - 1):
+                modified_x = self.lstms[i](modified_x)[0]
+            return modified_x
+        else:
+            modified_x = self.activate_func(self.encoder(x)[0])
+            for i in range(len(self.hidden_size) - 1):
+                modified_x = self.activate_func(self.lstms[i](modified_x)[0])
+            return modified_x
+
 
 
 
@@ -58,10 +68,16 @@ class MultiLayerDNN(nn.Module):
                 nn.Linear(in_features=hidden_units[i - 1], out_features=hidden_units[i], bias=True))
 
     def forward(self, x):
-        modified_x = self.activate_func(self.encoder(x))
-        for i in range(len(self.hidden_size) - 1):
-            modified_x = self.activate_func(self.dnns[i](modified_x))
-        return modified_x
+        if self.activate_func is None:
+            modified_x = self.encoder(x)
+            for i in range(len(self.hidden_size) - 1):
+                modified_x = self.dnns[i](modified_x)
+            return modified_x
+        else:
+            modified_x = self.activate_func(self.encoder(x))
+            for i in range(len(self.hidden_size) - 1):
+                modified_x = self.activate_func(self.dnns[i](modified_x))
+            return modified_x
 
 
 class FixedAttention(nn.Module):
@@ -143,7 +159,7 @@ class SelfAttention(nn.Module):
 
 
 class ForwardSelfAttentionLSTM(nn.Module):
-    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func, dropout):
         super(ForwardSelfAttentionLSTM, self).__init__()
 
         # Ensure hidden_units and num_layers are lists
@@ -159,6 +175,7 @@ class ForwardSelfAttentionLSTM(nn.Module):
         # self.num_lstms = num_lstms
         self.out_len = out_len
         self.activate_func = activate_func
+        self.dropout=dropout
 
         # Layers
         self.self_attention = nn.Linear(in_features=self.input_len, out_features=self.input_len,
@@ -177,7 +194,7 @@ class ForwardSelfAttentionLSTM(nn.Module):
         '''
         self.encoder_decoder = EncoderDecoder(input_len=self.input_len, hidden_units=self.hidden_size,
                                               num_layers=self.num_layers, activate_func=self.activate_func,
-                                              batch_first=True)
+                                              dropout=dropout, batch_first=True)
         self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
         self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
 
@@ -680,3 +697,86 @@ class CDLoss(nn.Module):
 
         total_loss = TL_TR_loss + CD_loss
         return total_loss
+
+
+
+class EncoderDecoder2(nn.Module):
+    def __init__(self, input_len, hidden_units, num_layers, activate_func, dropout=DROPOUT, batch_first=True):
+        # Ensure hidden_units and num_layers are lists
+        assert isinstance(hidden_units, list), "hidden_units must be a list"
+        assert isinstance(num_layers, list), "num_layers must be a list"
+        assert len(hidden_units) == len(num_layers), "hidden_units and num_layers must have the same length"
+
+        super(EncoderDecoder2, self).__init__()
+        self.input_len = input_len
+        self.hidden_size = hidden_units
+        self.num_layers = num_layers
+        self.batch_first = batch_first
+        self.activate_func = activate_func
+        self.dropout = dropout
+
+        # First LSTM layer (encoder)
+        self.encoder = nn.LSTM(input_size=input_len, hidden_size=hidden_units[0], num_layers=num_layers[0],
+                               batch_first=batch_first)
+        # List of subsequent LSTM layers
+        self.lstms = nn.ModuleList()
+        # List of linear transformations between layers
+        self.linear_transforms = nn.ModuleList()
+        for i in range(1, len(hidden_units)):
+            # Add a linear layer to multiply the output from the previous layer.
+            # This layer maps from dimension hidden_units[i-1] to hidden_units[i-1] (a square transformation).
+            self.linear_transforms.append(nn.Linear(hidden_units[i-1], hidden_units[i-1]))
+            self.lstms.append(
+                nn.LSTM(input_size=hidden_units[i-1], hidden_size=hidden_units[i], num_layers=num_layers[i],
+                        batch_first=batch_first, dropout=dropout)
+            )
+
+    def forward(self, x):
+        # Pass through the encoder
+        out, _ = self.encoder(x)
+        if self.activate_func is not None:
+            out = self.activate_func(out)
+        # Process through each subsequent LSTM layer,
+        # multiplying by a learnable weight matrix before passing to the LSTM.
+        for i in range(len(self.lstms)):
+            out = self.linear_transforms[i](out)  # weight multiplication between layers
+            out, _ = self.lstms[i](out)
+            if self.activate_func is not None:
+                out = self.activate_func(out)
+        return out
+
+
+class ForwardSelfAttentionLSTM2(nn.Module):
+    def __init__(self, input_len, hidden_units, out_len, num_layers, activate_func, dropout):
+        super(ForwardSelfAttentionLSTM2, self).__init__()
+
+        # Ensure hidden_units and num_layers are lists
+        assert isinstance(hidden_units, list), "hidden_units must be a list"
+        assert isinstance(num_layers, list), "num_layers must be a list"
+        assert len(hidden_units) == len(num_layers), "hidden_units and num_layers must have the same length"
+
+        self.input_len = input_len
+        self.hidden_size = hidden_units
+        self.num_layers = num_layers
+        self.out_len = out_len
+        self.activate_func = activate_func
+        self.dropout = dropout
+        self.hidden = None  # (if needed later)
+
+        # Self-attention layer applied to the input
+        self.self_attention = nn.Linear(in_features=self.input_len, out_features=self.input_len, bias=False)
+        # Use the modified encoder-decoder that includes weight multiplications
+        self.encoder_decoder = EncoderDecoder2(input_len=self.input_len, hidden_units=self.hidden_size,
+                                              num_layers=self.num_layers, activate_func=self.activate_func,
+                                              dropout=dropout, batch_first=True)
+        self.feedforward = nn.Linear(in_features=hidden_units[-1], out_features=hidden_units[-1], bias=True)
+        self.fc1 = nn.Linear(in_features=hidden_units[-1], out_features=out_len, bias=True)
+
+    def forward(self, x):
+        attentioned_x = self.self_attention(x)
+        modified_x = self.encoder_decoder(attentioned_x)
+        # Optionally add a residual connection with a feedforward layer, if desired:
+        # modified_x = F.relu(modified_x + self.feedforward(modified_x))
+        out = self.fc1(modified_x)
+        out = torch.sigmoid(out)
+        return out, self.hidden

@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # mkdir
     timestamp = datetime.now().strftime('%Y%m%d')
-    timestamp = '20240929_relu'
+    timestamp = '20240931_relu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'no_attention_lstm')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     if not os.path.exists(model_save_path):
@@ -118,7 +118,7 @@ if __name__ == '__main__':
         attention=0, timestamp=timestamp, epochs=EPOCHS, results_path=RESULTS_PATH, device=device)
 
     # Save model
-    model_name = f'Forward_epochs_{EPOCHS}_dnn_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
+    model_name = f'Forward_epochs_{EPOCHS}_lstm_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
     if os.path.exists(os.path.join(model_save_path, model_name)):
         os.remove(os.path.join(model_save_path, model_name))
     torch.save(forward_model, os.path.join(model_save_path, model_name))

@@ -20,7 +20,7 @@ if __name__ == '__main__':
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:3')
+        device = torch.device('cuda:2')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240914_tanh_TL_TR'
+    timestamp = '20240929_relu'
     RESULTS_PATH = os.path.join(RESULTS_PATH, 'no_attention_dnn')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
@@ -47,8 +47,8 @@ if __name__ == '__main__':
     lamda = range(900, 1801, 3 * SAMPLE_RATE)
 
     # Load models
-    # model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
-    model_name = f'Forward_mse_vloss_best_attn_0.pth'
+    model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
+    # model_name = f'Forward_mse_vloss_best_attn_0.pth'
     forward_model = torch.load(os.path.join(model_save_path, model_name))
     forward_model.to(device)
     forward_model.eval()

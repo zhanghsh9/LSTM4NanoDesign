@@ -13,14 +13,14 @@ import scipy.io as scio
 from data import create_dataset
 
 from parameters import RESULTS_PATH, DATA_PATH, FIGS_PATH, MODEL_PATH, RODS, BATCH_SIZE, NUM_WORKERS, SAMPLE_RATE, \
-    EPOCHS, NUM_LAYERS, HIDDEN_UNITS
+    EPOCHS, NUM_LAYERS, HIDDEN_UNITS, DATA, TEST_SIZE
 
 if __name__ == '__main__':
     # Get device
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA is not available')
     else:
-        device = torch.device('cuda:3')
+        device = torch.device('cuda:0')
         print(f'Running on {device} version = {torch.version.cuda}, device count = {torch.cuda.device_count()}')
         print()
 
@@ -28,16 +28,16 @@ if __name__ == '__main__':
     torch.manual_seed(time_now)
 
     # dir
-    timestamp = '20240930_relu'
-    RESULTS_PATH = os.path.join(RESULTS_PATH, 'no_attention_lstm')
+    timestamp = f'20250325_tanh_{DATA}_{TEST_SIZE}'
+    RESULTS_PATH = os.path.join(RESULTS_PATH, 'self_attention')
     model_save_path = os.path.join(RESULTS_PATH, timestamp, MODEL_PATH)
     figs_save_path = os.path.join(RESULTS_PATH, timestamp, FIGS_PATH)
 
     # Create dataloader
     transform = transforms.Compose([transforms.ToTensor()])
-    _, test_dataset = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL_TR', transform=transform,
-                                     sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
-    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, drop_last=True,
+    _, test_dataset, _ = create_dataset(data_path=DATA_PATH, rods=RODS, use_TL_TR='TL', data=DATA, transform=transform,
+                                        sample_rate=SAMPLE_RATE, make_spectrum_int=False, device=device)
+    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, drop_last=True,
                                  pin_memory=True)
     # Forward prediction
     forward_model = []
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     lamda = range(900, 1801, 3 * SAMPLE_RATE)
 
     # Load models
-    model_name = f'Forward_epochs_{EPOCHS}_dnn_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
+    # model_name = f'Forward_epochs_{EPOCHS}_lstms_{len(HIDDEN_UNITS)}_hidden_{HIDDEN_UNITS}.pth'
     model_name = f'Forward_mse_vloss_best_attn_0.pth'
     forward_model = torch.load(os.path.join(model_save_path, model_name))
     forward_model.to(device)
@@ -57,12 +57,17 @@ if __name__ == '__main__':
     prediction = []
     real = []
     vloss_best = 100
+    total_time = 0  # Initialize total time for inference
 
     with torch.no_grad():
         for i, data in enumerate(test_dataloader):
+            start_time = time.time()  # Start time before prediction
             vinputs, vlabels = data
             vinputs, vlabels = vinputs.float().to(device), vlabels.float().to(device)
             voutput, _ = forward_model(vinputs)
+            end_time = time.time()  # End time after prediction
+            inference_time = end_time - start_time
+            total_time += inference_time  # Accumulate total time
             mse_loss = forward_loss_fn(vlabels, voutput).item()
             mae_loss = forward_loss_fn_MAE(vlabels, voutput).item()
             forward_mse_loss_sum = forward_mse_loss_sum + mse_loss
@@ -129,9 +134,12 @@ if __name__ == '__main__':
                 plt.savefig(os.path.join(figs_save_path, f'TR_forward_{i}.png'), dpi=900)
                 plt.close()
             '''
+
         forward_mse_loss_sum = forward_mse_loss_sum / (i + 1)
         forward_mae_loss_sum = forward_mae_loss_sum / (i + 1)
         print(f'Forward MSE = {forward_mse_loss_sum}, MAE = {forward_mae_loss_sum}')
 
     results_save = {'real': real, 'prediction': prediction,  'mse': forward_mse_loss_sum, 'mae': forward_mae_loss_sum}
     scio.savemat(os.path.join(RESULTS_PATH, timestamp, 'results.mat'), mdict=results_save)
+    avg_time_per_batch = total_time / len(test_dataloader)  # Calculate average time
+    print(avg_time_per_batch)
